@@ -484,16 +484,19 @@ printVersionInfo (FILE * stream)
 {
   int i;
 
-  fprintf (stream, "SDCC : ");
-  for (i = 0; i < NUM_PORTS; i++)
-    fprintf (stream, "%s%s", i == 0 ? "" : "/", _ports[i]->target);
-
-  fprintf (stream, " " SDCC_VERSION_STR
+  fprintf (stream, "\nZSDCC is a modification of SDCC for Z88DK\n\n");
+  fprintf (stream, "sdcc website:\nhttps://sourceforge.net/projects/sdcc/\n\n");
+  fprintf (stream, "patch details:\nhttp://z88dk.cvs.sourceforge.net/viewvc/z88dk/z88dk/libsrc/_DEVELOPMENT/sdcc_z88dk_patch.zip\n\n");
+  fprintf (stream, "modification date:\n" __DATE__ "\n\n");
+  fprintf (stream, "sdcc -v:\n");
+  fprintf (stream, SDCC_VERSION_STR
 #ifdef SDCC_SUB_VERSION_STR
            "/" SDCC_SUB_VERSION_STR
 #endif
            " #%s (%s)\n", getBuildNumber (), getBuildEnvironment ());
-  fprintf (stream, "published under GNU General Public License (GPL)\n");
+  for (i = 0; i < NUM_PORTS; i++)
+    fprintf (stream, "%s%s", i == 0 ? "" : "/", _ports[i]->target);
+  fprintf (stream, "\n\npublished under GNU General Public License (GPL)\n");
 }
 
 static void

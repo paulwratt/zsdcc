@@ -272,6 +272,9 @@ stm8_dwarfRegNum (const struct reg_info *reg)
 static bool
 _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
 {
+  unsigned long long add, sub;
+  int topbit, nonzero, shifts;
+
   int result_size = IS_SYMOP (IC_RESULT (ic)) ? getSize (OP_SYM_TYPE (IC_RESULT(ic))) : 4;
   sym_link *test = NULL;
 
@@ -293,14 +296,10 @@ _hasNativeMulFor (iCode *ic, sym_link *left, sym_link *right)
         if ((getSize (left) != 2 || getSize (right) != 2) || result_size != 2 || !test)
           return FALSE;
 
-        unsigned long long add, sub;
-        int topbit, nonzero;
-        
-
         if (floatFromVal (valFromType (test)) < 0 || csdOfVal (&topbit, &nonzero, &add, &sub, valFromType (test)))
           return FALSE;
 
-        int shifts = topbit;
+        shifts = topbit;
 
         // If the leading digits of the cse are 1 0 -1 we can use 0 1 1 instead to reduce the number of shifts.
         if (topbit >= 2 && (add & (1ull << topbit)) && (sub & (1ull << (topbit - 2))))

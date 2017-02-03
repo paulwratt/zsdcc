@@ -10,7 +10,7 @@
 # Adopted for the SDCC/pic14 library by
 #	Raphael Neider <rneider AT web.de>
 #
-# $Id$
+# $Id: configure.ac 9568 2016-04-17 18:40:41Z molnarkaroly $
 #
 
 # Process this file with autoconf to produce a configure script.

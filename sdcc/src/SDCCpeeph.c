@@ -77,8 +77,10 @@ getPatternVar (hTab *vars, char **cmdLine)
   (*cmdLine)++;
   if (!ISCHARDIGIT (**cmdLine))
     goto error;
+
   varNumber = strtol (*cmdLine, &digitend, 10);
   *cmdLine = digitend;
+
   return hTabItemWithKey (vars, varNumber);
 
 error:
@@ -106,6 +108,7 @@ pcDistance (lineNode *cpos, char *lbl, bool back)
           !pl->isLabel &&
           !pl->isDebug)
         {
+
           if (port->peep.getSize)
             {
               dist += port->peep.getSize(pl);
@@ -212,7 +215,6 @@ FBYNAME (labelInRange)
       lbl = getPatternVar (vars, &cmdLine);
     }
   while (lbl);
-
   return TRUE;
 }
 
@@ -1220,6 +1222,40 @@ FBYNAME (notSame)
 }
 
 /*-----------------------------------------------------------------*/
+/* same - Check if first operand matches any of the remaining      */
+/*-----------------------------------------------------------------*/
+FBYNAME(same)
+{
+    set *operands;
+    const char *match, *op;
+
+    operands = setFromConditionArgs(cmdLine, vars);
+
+    if (!operands)
+    {
+        fprintf(stderr,
+            "*** internal error: same peephole restriction"
+            " malformed: %s\n", cmdLine);
+        return FALSE;
+    }
+
+    operands = reverseSet(operands);
+
+    match = setFirstItem(operands);
+    for (op = setNextItem(operands); op; op = setNextItem(operands))
+    {
+        if (strcmp(match, op) == 0)
+        {
+            deleteSet(&operands);
+            return TRUE;
+        }
+    }
+
+    deleteSet(&operands);
+    return FALSE;
+}
+
+/*-----------------------------------------------------------------*/
 /* operandsLiteral - returns true if the condition's operands are  */
 /* literals.                                                       */
 /*-----------------------------------------------------------------*/
@@ -1406,6 +1442,48 @@ FBYNAME (immdInRange)
     }
 }
 
+/*-----------------------------------------------------------------*/
+/* inSequence - Check that numerical constants are in sequence     */
+/*-----------------------------------------------------------------*/
+FBYNAME (inSequence)
+{
+  set *operands;
+  const char *op;
+  long seq, val, stride;
+
+  if ((operands = setFromConditionArgs(cmdLine, vars)) == NULL)
+    {
+      fprintf (stderr,
+               "*** internal error: inSequence peephole restriction"
+               " malformed: %s\n", cmdLine);
+      return FALSE;
+    }
+
+  operands = reverseSet(operands);
+
+  op = setFirstItem(operands);
+  if ((immdGet(op, &stride) == NULL) || ((op = setNextItem(operands)) == NULL))
+    {
+      fprintf (stderr,
+               "*** internal error: inSequence peephole restriction"
+               " malformed: %s\n", cmdLine);
+      return FALSE;
+    }
+
+  for (seq = LONG_MIN; op; op = setNextItem(operands))
+    {
+      if ((immdGet(op, &val) == NULL) || ((seq != LONG_MIN) && (val != seq+stride)))
+        {
+          deleteSet(&operands);
+          return FALSE;
+        }
+      seq = val;
+    }
+
+  deleteSet(&operands);
+  return TRUE;
+}
+
 static const struct ftab
 {
   char *fname;
@@ -1435,6 +1513,9 @@ ftab[] =                                            // sorted on the number of t
     "operandsNotRelated", operandsNotRelated        // 28
   },
   {
+    "same", same
+  },
+  {
     "labelJTInRange", labelJTInRange                // 13
   },
   {
@@ -1442,6 +1523,9 @@ ftab[] =                                            // sorted on the number of t
   },
   {
     "canAssign", canAssign                          // 8
+  },
+  {
+    "inSequence", inSequence                        // z88dk z80
   },
   {
     "optimizeReturn", optimizeReturn                // ? just a guess
@@ -1502,8 +1586,8 @@ callFuncByName (char *fname,
   /* Isolate the function name part (we are passed the full condition
    * string including arguments)
    */
-  cmdTerm = cmdCopy = Safe_strdup(fname);
 
+  cmdTerm = cmdCopy = Safe_strdup(fname);
   do
     {
       funcArgs = funcName = cmdTerm;
@@ -1538,12 +1622,15 @@ callFuncByName (char *fname,
                 num_parenthesis--;
               cmdTerm++;
             }
+
           *cmdTerm = '\0';  /* terminate the arguments */
           if (c == ')')
             {
               cmdTerm++;
+
               while ((c = *cmdTerm) && (c == ' ' || c == '\t' || c == ','))
                 cmdTerm++;
+
               if (!*cmdTerm)
                 cmdTerm = NULL;
             }
@@ -1565,7 +1652,6 @@ callFuncByName (char *fname,
               break;
             }
         }
-
       if (rc == -1)
         {
           fprintf (stderr,
@@ -1578,6 +1664,7 @@ callFuncByName (char *fname,
           break;
         }
     }
+
   while (rc && cmdTerm);
 
   Safe_free(cmdCopy);
@@ -1666,7 +1753,7 @@ getPeepLine (lineNode ** head, char **bpp)
 
       /* read till end of line */
       lp = lines;
-      while ((*bp != '\n' && *bp != '}') && *bp)
+      while (*bp && (*bp != '\n' && *bp != '}'))
         *lp++ = *bp++;
       *lp = '\0';
 
@@ -1772,8 +1859,11 @@ top:
   getPeepLine (&replace, &bp);
 
   /* look for a 'if' */
-  while ((ISCHARSPACE (*bp) || *bp == '\n') && *bp)
-    bp++;
+  while (*bp && (ISCHARSPACE (*bp) || *bp == '\n' || (*bp == '/' && *(bp+1) == '/')))
+  {
+    ++bp;
+	if (*bp == '/') while (*bp && *bp != '\n') ++bp;
+  }
 
   if (strncmp (bp, "if", 2) == 0)
     {
@@ -1989,7 +2079,6 @@ matchRule (lineNode * pl,
   spl = pl;
   while (spl && rpl)
     {
-
       /* if the source line starts with a ';' then
          comment line don't process or the source line
          contains == . debugger information skip it */
@@ -2556,6 +2645,7 @@ peepHole (lineNode ** pls)
       restart = FALSE;
 
       /* for all rules */
+
       for (pr = rootRules; pr; pr = pr->next)
         {
           if (restart && pr->barrier)
@@ -2591,7 +2681,9 @@ peepHole (lineNode ** pls)
                       spl = *pls;
                     }
                   else
+				  {
                     replaceRule (&spl, mtail, pr);
+				  }
 
                   /* if restart rule type then
                      start at the top again */

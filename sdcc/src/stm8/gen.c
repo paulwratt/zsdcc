@@ -3632,7 +3632,7 @@ genMultLit (const iCode *ic)
   /* Generate a sequence of shifts, additions and subtractions based on the canonical signed digit representation of the literal operand */
   {
     unsigned long long add, sub;
-    int topbit, nonzero;
+    int topbit, nonzero, bit;
 
     wassert(!csdOfVal (&topbit, &nonzero, &add, &sub, right->aop->aopu.aop_lit));
 
@@ -3644,7 +3644,7 @@ genMultLit (const iCode *ic)
         topbit--;
       }
 
-    for (int bit = topbit - 1; bit >= 0; bit--)
+    for (bit = topbit - 1; bit >= 0; bit--)
       {
         emit3w (A_SLLW, ASMOP_X, 0);
         if ((add | sub) & (1ull << bit))

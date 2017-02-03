@@ -1,0 +1,9 @@
+.svn/
+**/.vs/
+**/bin/
+**/bin_vc/
+**/Debug
+**/Release
+**/*.exe
+**/*.o
+sdcc/sdcc.VC.db

@@ -25,7 +25,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id$ */
+/* $Id: serial_hw.cc 9818 2016-12-13 10:53:09Z drdani $ */
 
 #include <stdio.h>
 #include <stdlib.h>
