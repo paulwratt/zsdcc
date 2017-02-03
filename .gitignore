@@ -27,3 +27,4 @@ sdcc/src/z80/peeph.rul
 sdcc/support/cpp/auto-host.h
 sdcc/support/cpp/options.c
 sdcc/support/cpp/options.h
+sdcc.txt
