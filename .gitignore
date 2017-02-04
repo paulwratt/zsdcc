@@ -1,13 +1,9 @@
 .svn/
-**/.vs/
-**/bin/
-**/bin_vc/
-**/Debug
-**/Release
-**/*.exe
-**/*.o
-sdcc/sdcc.VC.db
-sdcc/sdas/linksrc/asxxxx_config.h
+**/Debug/*
+**/Release/*
+**/bin/*
+**/bin_vc/*
+**/.vs/*
 sdcc/sdcc_vc.h
 sdcc/src/SDCClex.c
 sdcc/src/SDCCy.c
@@ -27,4 +23,6 @@ sdcc/src/z80/peeph.rul
 sdcc/support/cpp/auto-host.h
 sdcc/support/cpp/options.c
 sdcc/support/cpp/options.h
-sdcc.txt
+sdcc/sdas/linksrc/asxxxx_config.h
+sdcc/sdcc.VC.db
+
