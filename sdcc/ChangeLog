@@ -1,3 +1,37 @@
+2017-02-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Optimize wide right shifts, part of RFE #524.
+	* device/lib/rand.c,
+	  support/regression/tests/rand.c:
+	  Fix default seed.
+
+2017-02-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/lib/rand.c:
+	  Replace LCG by xorshift for rand().
+	* src/z80/gen.c:
+	  Optimize wide left shifts, part of RFE #524.
+
+2017-02-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/pic14/math.h,
+	  device/include/pic16/math.h,
+	  device/lib/pic14/libm/Makefile.am,
+	  device/lib/pic14/libm/Makefile.in,
+	  device/lib/pic16/libm/Makefile.am,
+	  device/lib/pic16/libm/Makefile.in,
+	  src/pic14/gen.c,
+	  src/pic14/glue.c,
+	  support/regression/compact-results.py,
+	  support/regression/ports/pic14/support.c,
+	  support/regression/tests/absolute.c,
+	  support/regression/tests/bug1723128.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/gcc-torture-execute-20021120-1.c,
+	  support/regression/tests/gcc-torture-execute-pr19606.c:
+	  Various pic14-related fixes: Patches 00, 01, 02, 04, 05, 07, 09, 11, 14, 15 by Martin Habets via sdcc-devel.
+
 2017-01-13 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
 
 	* src/SDCCast.c (expandInlineFuncs,fixupInline): Fix bug #2559
