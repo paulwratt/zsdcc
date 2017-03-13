@@ -1,7 +1,8 @@
-CC		= sdcc --model-large
+CC		= sdcc 
 
+MODEL		= large
 CPPFLAGS	=
-CFLAGS		= --debug
+CFLAGS		= --debug --model-$(MODEL)
 LDFLAGS		=
 LIBS		=
 
@@ -36,6 +37,7 @@ clean:
 	rm -f $(MAIN).ihx $(MAIN).hex $(MAIN).lk $(MAIN).map $(MAIN).mem $(MAIN).cdb $(MAIN).omf $(MAIN).noi
 	rm -f *~
 	rm -f $(MAIN).dep
+	rm -f $(MAIN).sim
 
 
 # End of sdcc.mk

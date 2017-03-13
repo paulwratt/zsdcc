@@ -25,10 +25,11 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: timer.cc 621 2017-02-03 10:13:54Z drdani $ */
+/* $Id: timer.cc 677 2017-03-07 08:16:02Z drdani $ */
+
+#include "itsrccl.h"
 
 #include "clkcl.h"
-
 #include "timercl.h"
 
 
@@ -46,6 +47,17 @@ enum tim_cr1_bits {
   arpe	= 0x80
 };
 
+enum tim_sr1_bits {
+  uif	= 0x01
+};
+
+enum tim_ier_bits {
+  uie	= 0x01
+};
+
+enum tim_egr_bits {
+  ug	= 0x01
+};
 
 cl_tim::cl_tim(class cl_uc *auc, int aid, t_addr abase):
   cl_hw(auc, HW_TIMER, aid, "tim")
@@ -141,6 +153,7 @@ cl_tim::reset(void)
   regs[idx.arrl]->set(0xff);
 
   update_event();
+  regs[idx.sr1]->set_bit0(uif);
 }
 
 void
@@ -225,7 +238,7 @@ cl_tim::write(class cl_memory_cell *cell, t_mem *val)
     }
   else if (a == idx.egr)
     {
-      if (*val & 0x01)
+      if (*val & ug)
 	{
 	  update_event();
 	  prescaler_cnt= calc_prescaler() - 1;
@@ -368,6 +381,7 @@ cl_tim::update_event(void)
 	  set_counter(ar);
 	}
     }
+  regs[idx.sr1]->set_bit1(uif);
 }
 
 // true: UP, false: down
@@ -477,7 +491,15 @@ cl_tim1_saf::cl_tim1_saf(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim1_saf::init(void)
 {
+  class cl_it_src *is;
   cl_tim1::init();
+  uc->it_sources->add(is= new cl_it_src(uc, 11,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+11*4, false, false,
+					"timer1 update",
+					30*10+1));
+  is->init();
   return 0;
 }
 
@@ -525,7 +547,15 @@ cl_tim1_all::cl_tim1_all(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim1_all::init(void)
 {
+  class cl_it_src *is;
   cl_tim1::init();
+  uc->it_sources->add(is= new cl_it_src(uc, 23,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+23*4, false, false,
+					"timer1 update",
+					30*10+1));
+  is->init();
   return 0;
 }
 
@@ -591,9 +621,17 @@ cl_tim2_saf_a::cl_tim2_saf_a(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim2_saf_a::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 13,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+13*4, false, false,
+					"timer2 update",
+					30*10+2));
+  is->init();
   return 0;
 }
 
@@ -642,9 +680,17 @@ cl_tim2_saf_b::cl_tim2_saf_b(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim2_saf_b::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 13,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+13*4, false, false,
+					"timer2 update",
+					30*10+2));
+  is->init();
   return 0;
 }
 
@@ -693,8 +739,16 @@ cl_tim2_all::cl_tim2_all(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim2_all::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 3;
+  uc->it_sources->add(is= new cl_it_src(uc, 19,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+19*4, false, false,
+					"timer2 update",
+					30*10+2));
+  is->init();
   return 0;
 }
 
@@ -743,8 +797,16 @@ cl_tim2_l101::cl_tim2_l101(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim2_l101::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 3;
+  uc->it_sources->add(is= new cl_it_src(uc, 19,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+19*4, false, false,
+					"timer2 update",
+					30*10+2));
+  is->init();
   return 0;
 }
 
@@ -795,9 +857,17 @@ cl_tim3_saf::cl_tim3_saf(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim3_saf::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 15,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+15*4, false, false,
+					"timer3 update",
+					30*10+3));
+  is->init();
   return 0;
 }
 
@@ -846,8 +916,16 @@ cl_tim3_all::cl_tim3_all(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim3_all::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 3;
+  uc->it_sources->add(is= new cl_it_src(uc, 21,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+21*4, false, false,
+					"timer3 update",
+					30*10+3));
+  is->init();
   return 0;
 }
 
@@ -896,8 +974,16 @@ cl_tim3_l101::cl_tim3_l101(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim3_l101::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 3;
+  uc->it_sources->add(is= new cl_it_src(uc, 21,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+21*4, false, false,
+					"timer3 update",
+					30*10+3));
+  is->init();
   return 0;
 }
 
@@ -948,9 +1034,17 @@ cl_tim5_saf::cl_tim5_saf(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim5_saf::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 13,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+13*4, false, false,
+					"timer5 update",
+					30*10+5));
+  is->init();
   return 0;
 }
 
@@ -999,8 +1093,16 @@ cl_tim5_all::cl_tim5_all(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim5_all::init(void)
 {
+  class cl_it_src *is;
   cl_tim235::init();
   pbits= 3;
+  uc->it_sources->add(is= new cl_it_src(uc, 27,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+27*4, false, false,
+					"timer5 update",
+					30*10+5));
+  is->init();
   return 0;
 }
 
@@ -1067,9 +1169,17 @@ cl_tim4_saf_a::cl_tim4_saf_a(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim4_saf_a::init(void)
 {
+  class cl_it_src *is;
   cl_tim46::init();
   pbits= 3;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 23,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+23*4, false, false,
+					"timer4 update",
+					30*10+4));
+  is->init();
   return 0;
 }
 
@@ -1118,9 +1228,17 @@ cl_tim4_saf_b::cl_tim4_saf_b(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim4_saf_b::init(void)
 {
+  class cl_it_src *is;
   cl_tim46::init();
   pbits= 3;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 23,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+23*4, false, false,
+					"timer4 update",
+					30*10+4));
+  is->init();
   return 0;
 }
 
@@ -1169,9 +1287,17 @@ cl_tim4_all::cl_tim4_all(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim4_all::init(void)
 {
+  class cl_it_src *is;
   cl_tim46::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 25,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+25*4, false, false,
+					"timer4 update",
+					30*10+4));
+  is->init();
   return 0;
 }
 
@@ -1220,9 +1346,17 @@ cl_tim4_l101::cl_tim4_l101(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim4_l101::init(void)
 {
+  class cl_it_src *is;
   cl_tim46::init();
   pbits= 4;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 25,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+25*4, false, false,
+					"timer4 update",
+					30*10+4));
+  is->init();
   return 0;
 }
 
@@ -1273,9 +1407,17 @@ cl_tim6_saf::cl_tim6_saf(class cl_uc *auc, int aid, t_addr abase):
 int
 cl_tim6_saf::init(void)
 {
+  class cl_it_src *is;
   cl_tim46::init();
   pbits= 3;
   bidir= false;
+  uc->it_sources->add(is= new cl_it_src(uc, 23,
+					regs[idx.ier], uie,
+					regs[idx.sr1], uif,
+					0x8008+23*4, false, false,
+					"timer6 update",
+					30*10+6));
+  is->init();
   return 0;
 }
 

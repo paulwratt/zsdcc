@@ -224,6 +224,7 @@ cl_uc::init(void)
 						l, fname);
 	}
     }
+  irq= false;
   reset();
   return(0);
 }
@@ -239,6 +240,7 @@ cl_uc::reset(void)
 {
   class it_level *il;
 
+  irq= false;
   instPC= PC= 0;
   state = stGO;
   ticks->ticks= 0;
@@ -845,7 +847,7 @@ cl_uc::set_rom(t_addr addr, t_mem val)
   t_addr size= rom->get_size();
   if (addr < size)
     {
-      rom->set(addr, val);
+      rom->download(addr, val);
       return;
     }
   t_addr bank, caddr;
@@ -862,7 +864,7 @@ cl_uc::set_rom(t_addr addr, t_mem val)
 	}
       //printf("setting %ld/rom[%lx]=%x\n", bank, caddr, val);
       d->switch_to(bank, NULL);
-      rom->set(caddr, val);
+      rom->download(caddr, val);
       d->activate(NULL);
     }
   else
@@ -1830,8 +1832,10 @@ cl_uc::do_inst(int step)
       
       post_inst();
 
-      if (res == resGO)
+      if ((res == resGO) &&
+	  irq)
 	{
+	  //printf("DO INTERRUPT PC=%lx\n", PC);
 	  int r= do_interrupt();
 	  if (r != resGO)
 	    res= r;
@@ -1858,6 +1862,30 @@ cl_uc::exec_inst(void)
   return(resGO);
 }
 
+int
+cl_uc::exec_inst_tab(instruction_wrapper_fn itab[])
+{
+  t_mem c;
+  int res= resGO;
+  instPC= PC;
+  if (fetch(&c))
+    return resBREAKPOINT;
+  if (itab[c] == NULL)
+    {
+      PC= instPC;
+      return resNOT_DONE;
+    }
+  res= itab[c](this, c);
+  if (res == resNOT_DONE)
+    {
+      PC= instPC;
+      return res;
+    }
+  tick(1);
+  return res;
+}
+
+
 void
 cl_uc::post_inst(void)
 {
@@ -1882,8 +1910,13 @@ cl_uc::do_interrupt(void)
 
   // Maskable interrupts
   if (!it_enabled())
-    return resGO;
+    {
+      //printf("do_interrupt skip (it disabled)\n");
+      return resGO;
+    }
   class it_level *il= (class it_level *)(it_levels->top()), *IL= 0;
+  irq= false;
+  //printf("Checking IRQs...\n");
   for (i= 0; i < it_sources->count; i++)
     {
       class cl_it_src *is= (class cl_it_src *)(it_sources->at(i));
@@ -1893,6 +1926,7 @@ cl_uc::do_interrupt(void)
 	{
 	  int pr= priority_of(is->nuof);
 	  int ap;
+	  irq= true;
 	  if (il &&
 	      il->level >= 0)
 	    ap= il->level;
