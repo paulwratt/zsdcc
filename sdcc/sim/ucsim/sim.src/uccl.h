@@ -40,6 +40,10 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "varcl.h"
 
 
+class cl_uc;
+
+typedef int (*instruction_wrapper_fn)(class cl_uc *uc, t_mem code);
+
 /* Counter to count clock ticks */
 
 #define TICK_RUN	0x01
@@ -118,7 +122,8 @@ public:
   //class cl_list *address_decoders;
   class cl_address_space *variables;
   class cl_var_list *vars;
-  
+
+  bool irq;
   class cl_irqs *it_sources;	// Sources of interrupts
   class cl_list *it_levels;	// Follow interrupt services
   class cl_list *stack_ops;	// Track stack operations
@@ -192,6 +197,7 @@ public:
   virtual int do_inst(int step);
   virtual void pre_inst(void);
   virtual int exec_inst(void);
+  virtual int exec_inst_tab(instruction_wrapper_fn itab[]);
   virtual void post_inst(void);
 
   virtual int do_interrupt(void);
@@ -200,6 +206,8 @@ public:
   virtual int accept_it(class it_level *il);
   virtual bool it_enabled(void) { return false; }
 
+#include "uccl_instructions.h"
+  
   // stack tracking
   virtual void stack_write(class cl_stack_op *op);
   virtual void stack_read(class cl_stack_op *op);

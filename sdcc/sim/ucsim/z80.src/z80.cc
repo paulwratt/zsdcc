@@ -131,10 +131,29 @@ cl_z80::make_memories(void)
   as->decoders->add(ad);
   ad->activate(0);
 
+  inputs= new cl_address_space("inputs", 0, 0x10000, 8);
+  inputs->init();
+  chip= new cl_memory_chip("in_chip", 0x10000, 8);
+  chip->init();
+  memchips->add(chip);
+  ad= new cl_address_decoder(inputs, chip, 0, 0xffff, 0);
+  ad->init();
+  inputs->decoders->add(ad);
+  address_spaces->add(inputs);
+  outputs= new cl_address_space("outputs", 0, 0x10000, 8);
+  outputs->init();
+  chip= new cl_memory_chip("out_chip", 0x10000, 8);
+  chip->init();
+  memchips->add(chip);
+  ad= new cl_address_decoder(outputs, chip, 0, 0xffff, 0);
+  ad->init();
+  outputs->decoders->add(ad);
+  address_spaces->add(outputs);
+  
   regs8= new cl_address_space("regs8", 0, 16, 8);
   regs8->init();
-  regs8->get_cell(0)->decode((t_mem*)&regs.A);
-  regs8->get_cell(1)->decode((t_mem*)&regs.F);
+  regs8->get_cell(0)->decode((t_mem*)&regs.raf.A);
+  regs8->get_cell(1)->decode((t_mem*)&regs.raf.F);
   regs8->get_cell(2)->decode((t_mem*)&regs.bc.h);
   regs8->get_cell(3)->decode((t_mem*)&regs.bc.l);
   regs8->get_cell(4)->decode((t_mem*)&regs.de.h);
@@ -142,8 +161,8 @@ cl_z80::make_memories(void)
   regs8->get_cell(6)->decode((t_mem*)&regs.hl.h);
   regs8->get_cell(7)->decode((t_mem*)&regs.hl.l);
 
-  regs8->get_cell(8)->decode((t_mem*)&regs.aA);
-  regs8->get_cell(9)->decode((t_mem*)&regs.aF);
+  regs8->get_cell(8)->decode((t_mem*)&regs.ralt_af.aA);
+  regs8->get_cell(9)->decode((t_mem*)&regs.ralt_af.aF);
   regs8->get_cell(10)->decode((t_mem*)&regs.a_bc.h);
   regs8->get_cell(11)->decode((t_mem*)&regs.a_bc.l);
   regs8->get_cell(12)->decode((t_mem*)&regs.a_de.h);
@@ -503,16 +522,16 @@ void
 cl_z80::print_regs(class cl_console_base *con)
 {
   con->dd_printf("SZ-A-PNC  Flags= 0x%02x %3d %c  ",
-                 regs.F, regs.F, isprint(regs.F)?regs.F:'.');
+                 regs.raf.F, regs.raf.F, isprint(regs.raf.F)?regs.raf.F:'.');
   con->dd_printf("A= 0x%02x %3d %c\n",
-                 regs.A, regs.A, isprint(regs.A)?regs.A:'.');
+                 regs.raf.A, regs.raf.A, isprint(regs.raf.A)?regs.raf.A:'.');
   con->dd_printf("%c%c-%c-%c%c%c\n",
-                 (regs.F&BIT_S)?'1':'0',
-                 (regs.F&BIT_Z)?'1':'0',
-                 (regs.F&BIT_A)?'1':'0',
-                 (regs.F&BIT_P)?'1':'0',
-                 (regs.F&BIT_N)?'1':'0',
-                 (regs.F&BIT_C)?'1':'0');
+                 (regs.raf.F&BIT_S)?'1':'0',
+                 (regs.raf.F&BIT_Z)?'1':'0',
+                 (regs.raf.F&BIT_A)?'1':'0',
+                 (regs.raf.F&BIT_P)?'1':'0',
+                 (regs.raf.F&BIT_N)?'1':'0',
+                 (regs.raf.F&BIT_C)?'1':'0');
   con->dd_printf("BC= 0x%04x [BC]= %02x %3d %c  ",
                  regs.BC, ram->get(regs.BC), ram->get(regs.BC),
                  isprint(ram->get(regs.BC))?ram->get(regs.BC):'.');
@@ -775,11 +794,12 @@ t_mem       cl_z80::peek1 ( void ) {
 
 u8_t  cl_z80:: in_byte( u16_t ioaddr )
 {
-  return 0;
+  return inputs->read(ioaddr);
 }
 
 void        cl_z80::out_byte( u16_t ioaddr, u8_t io_val )
 {
+  outputs->write(ioaddr, io_val);
   return;
 }
 
@@ -794,7 +814,7 @@ u8_t  cl_z80::reg_g_read ( t_mem g )
     case 4:  return regs.hl.h;
     case 5:  return regs.hl.l;
     case 6:  return get1( regs.HL );
-    case 7:  return regs.A;
+    case 7:  return regs.raf.A;
     default:
       return 0xffU;
     }
@@ -814,7 +834,7 @@ void        cl_z80::reg_g_store( t_mem g, u8_t new_val )
       store1( regs.HL, new_val );
       break;
 
-    case 7:  regs.A    = new_val;  break;  /* write to a */
+    case 7:  regs.raf.A    = new_val;  break;  /* write to a */
     }
 }
 

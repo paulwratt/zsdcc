@@ -54,7 +54,7 @@ class cl_hw_io: public cl_console
   virtual int init(void);
   
   virtual int proc_input(class cl_cmdset *cmdset);
-  virtual bool prevent_quit(void) { return false; }
+  virtual bool prevent_quit(void) { return get_fin() && get_fin()->tty; }
   virtual void print_prompt(void) {}
 
   virtual void convert2console(void);
@@ -101,6 +101,7 @@ class cl_hw: public cl_guiobj
   virtual void set_cmd(class cl_cmdline *cmdline, class cl_console_base *con);
   virtual class cl_memory_cell *register_cell(class cl_address_space *mem,
 					      t_addr addr);
+  virtual class cl_memory_cell *register_cell(class cl_memory_cell *cell);
   virtual void unregister_cell(class cl_memory_cell *cell);
 
   virtual int tick(int cycles);
