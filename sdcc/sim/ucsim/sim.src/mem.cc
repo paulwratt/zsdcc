@@ -459,8 +459,8 @@ cl_memory::search_next(bool case_sensitive,
  *                                                             Memory operators
  */
 
-cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell,
-				       t_addr addr):
+cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell/*,
+								    t_addr addr*/):
   cl_base()
 {
   cell= acell;
@@ -475,7 +475,7 @@ cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell,
       mask= ~0;
     }
   next_operator= 0;
-  address= addr;
+  //address= addr;
 }
 /*
 cl_memory_operator::cl_memory_operator(class cl_memory_cell *acell,
@@ -523,9 +523,9 @@ cl_memory_operator::write(t_mem val)
 /* Memory operator for bank switcher */
 
 cl_bank_switcher_operator::cl_bank_switcher_operator(class cl_memory_cell *acell,
-						     t_addr addr,
+						     /*t_addr addr,*/
 						     class cl_banker *the_banker):
-  cl_memory_operator(acell, addr)
+  cl_memory_operator(acell/*, addr*/)
 {
   banker= the_banker;
   set_name("bank_switcher");
@@ -546,10 +546,10 @@ cl_bank_switcher_operator::write(t_mem val)
 
 /* Memory operator for hw callbacks */
 
-cl_hw_operator::cl_hw_operator(class cl_memory_cell *acell, t_addr addr,
+cl_hw_operator::cl_hw_operator(class cl_memory_cell *acell/*, t_addr addr*/,
 			       //t_mem *data_place, t_mem the_mask,
 			       class cl_hw *ahw):
-  cl_memory_operator(acell, addr/*, data_place, the_mask*/)
+  cl_memory_operator(acell/*, addr*//*, data_place, the_mask*/)
 {
   hw= ahw;
   set_name("hw");
@@ -604,10 +604,10 @@ cl_hw_operator::write(t_mem val)
 
 /* Write event break on cell */
 
-cl_write_operator::cl_write_operator(class cl_memory_cell *acell, t_addr addr,
+cl_write_operator::cl_write_operator(class cl_memory_cell *acell/*, t_addr addr*/,
 				     //t_mem *data_place, t_mem the_mask,
 				     class cl_uc *auc, class cl_brk *the_bp):
-  cl_event_break_operator(acell, addr/*, data_place, the_mask*/, auc, the_bp)
+  cl_event_break_operator(acell/*, addr*//*, data_place, the_mask*/, auc, the_bp)
 {
   uc= auc;
   bp= the_bp;
@@ -629,10 +629,10 @@ cl_write_operator::write(t_mem val)
 
 /* Read event break on cell */
 
-cl_read_operator::cl_read_operator(class cl_memory_cell *acell, t_addr addr,
+cl_read_operator::cl_read_operator(class cl_memory_cell *acell/*, t_addr addr*/,
 				   //t_mem *data_place, t_mem the_mask,
 				   class cl_uc *auc, class cl_brk *the_bp):
-  cl_event_break_operator(acell, addr/*, data_place, the_mask*/, auc, the_bp)
+  cl_event_break_operator(acell/*, addr*//*, data_place, the_mask*/, auc, the_bp)
 {
   uc= auc;
   bp= the_bp;
@@ -664,6 +664,12 @@ cl_cell_data::d()
 
 void
 cl_cell_data::d(t_mem v)
+{
+  data?(*data=v):0;
+}
+
+void
+cl_cell_data::dl(t_mem v)
 {
   data?(*data=v):0;
 }
@@ -770,7 +776,7 @@ cl_bit_cell16::d(t_mem v)
 cl_memory_cell::cl_memory_cell(uchar awidth)//: cl_base()
 {
   data= 0;
-  flags= 0;
+  flags= CELL_NON_DECODED;
   width= awidth;
   //*data= 0;
   def_data= 0;
@@ -780,6 +786,13 @@ cl_memory_cell::cl_memory_cell(uchar awidth)//: cl_base()
 #ifdef STATISTIC
   nuof_writes= nuof_reads= 0;
 #endif
+  mask= 1;
+  int w= width;
+  for (--w; w; w--)
+    {
+      mask<<= 1;
+      mask|= 1;
+    }
 }
 
 cl_memory_cell::~cl_memory_cell(void)
@@ -794,14 +807,14 @@ cl_memory_cell::init(void)
 {
   //cl_base::init();
   data= &def_data;
-  flags= CELL_NON_DECODED;
-  mask= 1;
+  //flags= CELL_NON_DECODED;
+  /*mask= 1;
   int w= width;
   for (--w; w; w--)
     {
       mask<<= 1;
       mask|= 1;
-    }
+      }*/
   //set(0/*rand()*/);
   return(0);
 }
@@ -927,6 +940,8 @@ cl_memory_cell::write(t_mem val)
 #endif
   if (operators)
     val= operators->write(val);
+  if (flags & CELL_READ_ONLY)
+    return d();
   if (width == 1)
     d(val);
   else
@@ -937,6 +952,8 @@ cl_memory_cell::write(t_mem val)
 t_mem
 cl_memory_cell::set(t_mem val)
 {
+  if (flags & CELL_READ_ONLY)
+    return d();
   if (width == 1)
     d(val);
   else
@@ -944,7 +961,15 @@ cl_memory_cell::set(t_mem val)
   return /* *data*/d();
 }
 
-
+t_mem
+cl_memory_cell::download(t_mem val)
+{
+  if (width == 1)
+    dl(val);
+  else
+    /* *data=*/dl(val & mask);
+  return /* *data*/d();
+}
 
 t_mem
 cl_memory_cell::add(long what)
@@ -964,21 +989,42 @@ void
 cl_memory_cell::set_bit1(t_mem bits)
 {
   bits&= mask;
-  /*(*data)|=*/d(d()| bits);
+  /*(*data)|=*//*d*/set(d()| bits);
+}
+
+void
+cl_memory_cell::write_bit1(t_mem bits)
+{
+  bits&= mask;
+  /*(*data)|=*//*d*/write(d()| bits);
 }
 
 void
 cl_memory_cell::set_bit0(t_mem bits)
 {
   bits&= mask;
-  /*(*data)&=*/d(d()& ~bits);
+  /*(*data)&=*//*d*/set(d()& ~bits);
+}
+
+void
+cl_memory_cell::write_bit0(t_mem bits)
+{
+  bits&= mask;
+  /*(*data)&=*//*d*/write(d()& ~bits);
 }
 
 void
 cl_memory_cell::toggle_bits(t_mem bits)
 {
   bits&= mask;
-  d(d() ^ bits);
+  /*d*/set(d() ^ bits);
+}
+
+void
+cl_memory_cell::wtoggle_bits(t_mem bits)
+{
+  bits&= mask;
+  /*d*/write(d() ^ bits);
 }
 
 
@@ -1077,9 +1123,9 @@ cl_memory_cell::get_banker(void)
 }
 
 class cl_memory_cell *
-cl_memory_cell::add_hw(class cl_hw *hw, t_addr addr)
+cl_memory_cell::add_hw(class cl_hw *hw/*, t_addr addr*/)
 {
-  class cl_hw_operator *o= new cl_hw_operator(this, addr/*, data, mask*/, hw);
+  class cl_hw_operator *o= new cl_hw_operator(this/*, addr*//*, data, mask*/, hw);
   append_operator(o);
   return(this);
 }
@@ -1162,7 +1208,7 @@ cl_address_space::cl_address_space(const char *id,
     cell= &c8;
   else if (awidth <= 16)
     cell= &c16;
-  cell->init();
+  //cell->init();
   int i;
   for (i= 0; i < size; i++)
     {
@@ -1251,6 +1297,20 @@ cl_address_space::set(t_addr addr, t_mem val)
       return;
     }
   /* *(cella[idx].data)=*/cella[idx].set( val/*&(data_mask)*/);
+}
+
+void
+cl_address_space::download(t_addr addr, t_mem val)
+{
+  t_addr idx= addr-start_address;
+  if (idx >= size ||
+      addr < start_address)
+    {
+      err_inv_addr(addr);
+      dummy->download(val);
+      return;
+    }
+  /* *(cella[idx].data)=*/cella[idx].download( val/*&(data_mask)*/);
 }
 
 t_mem
@@ -1342,6 +1402,15 @@ cl_address_space::set_cell_flag(t_addr addr, bool set_to, enum cell_flag flag)
   else
     cell= &cella[idx];
   cell->set_flag(flag, set_to);
+}
+
+void
+cl_address_space::set_cell_flag(t_addr start_addr, t_addr end_addr, bool set_to, enum cell_flag flag)
+{
+  t_addr a;
+
+  for (a= start_addr; a <= end_addr; a++)
+    set_cell_flag(a, set_to, flag);
 }
 
 class cl_memory_cell *
@@ -1498,7 +1567,7 @@ cl_address_space::register_hw(t_addr addr, class cl_hw *hw,
       addr < start_address)
     return(0);
   class cl_memory_cell *cell= &cella[idx];
-  cell->add_hw(hw, addr);
+  cell->add_hw(hw/*, addr*/);
   if (announce)
     ;//uc->sim->/*app->*/mem_cell_changed(this, addr);//FIXME
   return(cell);
@@ -1530,12 +1599,12 @@ cl_address_space::set_brk(t_addr addr, class cl_brk *brk)
     {
     case brkWRITE: case brkWXRAM: case brkWIRAM: case brkWSFR:
       //e= 'W';
-      op= new cl_write_operator(cell, addr, //cell->get_data(), cell->get_mask(),
+      op= new cl_write_operator(cell/*, addr*/, //cell->get_data(), cell->get_mask(),
 				uc, brk);
       break;
     case brkREAD: case brkRXRAM: case brkRCODE: case brkRIRAM: case brkRSFR:
       //e= 'R';
-      op= new cl_read_operator(cell, addr, //cell->get_data(), cell->get_mask(),
+      op= new cl_read_operator(cell/*, addr*/, //cell->get_data(), cell->get_mask(),
 			       uc, brk);
       break;
     case brkNONE:
@@ -1604,16 +1673,32 @@ cl_address_space_list::add(class cl_address_space *mem)
  *                                                                  Memory chip
  */
 
-cl_memory_chip::cl_memory_chip(const char *id, int asize, int awidth, int initial):
+cl_memory_chip::cl_memory_chip(const char *id,
+			       int asize,
+			       int awidth,
+			       int initial):
   cl_memory(id, asize, awidth)
 {
   array= (t_mem *)malloc(size * sizeof(t_mem));
   init_value= initial;
+  array_is_mine= true;
+}
+
+cl_memory_chip::cl_memory_chip(const char *id,
+			       int asize,
+			       int awidth,
+			       t_mem *aarray):
+  cl_memory(id, asize, awidth)
+{
+  array= aarray;
+  init_value= 0;
+  array_is_mine= false;
 }
 
 cl_memory_chip::~cl_memory_chip(void)
 {
-  if (array)
+  if (array &&
+      array_is_mine)
     free(array);
 }
 
@@ -1622,10 +1707,13 @@ cl_memory_chip::init(void)
 {
   cl_memory::init();
   int i;
-  for (i= 0; i < size; i++)
-    set(i,
-	(init_value<0)?rand():(init_value)
-	);
+  if (array_is_mine)
+    {
+      for (i= 0; i < size; i++)
+	set(i,
+	    (init_value<0)?rand():(init_value)
+	    );
+    }
   return(0);
 }
 
@@ -1985,7 +2073,7 @@ cl_banker::init()
   if (c)
     {
       class cl_bank_switcher_operator *o=
-	new cl_bank_switcher_operator(c, banker_addr, this);
+	new cl_bank_switcher_operator(c/*, banker_addr*/, this);
       c->prepend_operator(o);
     }
   
