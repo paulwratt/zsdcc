@@ -414,6 +414,14 @@ cl_f::get(void)
 }
 
 int
+cl_f::free_place(void)
+{
+  if (first_free >= last_used)
+    return 1024 - (first_free - last_used) -1;
+  return last_used - first_free -1;
+}
+
+int
 cl_f::finish_esc(int k)
 {
   esc_buffer[0]= 0;
@@ -421,7 +429,7 @@ cl_f::finish_esc(int k)
 }
 
 int
-cl_f::process_telnet(char ci)
+cl_f::process_telnet(unsigned char ci)
 {
   int l= strlen(esc_buffer);
   esc_buffer[l]= ci;
@@ -896,7 +904,10 @@ int
 cl_f::pick(void)
 {
   char b[100];
-  int i= ::read(file_id, b, 99);
+  int fp= free_place();
+  if (fp < 5)
+    return 0;
+  int i= ::read(file_id, b, (fp>101)?99:fp-1);
   deb("pick fid=%d i=%d\n", file_id, i);
   {int j;for(j=0;j<i;j++)deb("pick[%d]=%s\n",j,dc(b[j]));}
   if (i > 0)
@@ -951,6 +962,49 @@ int
 cl_f::read(int *buf, int max)
 {
   return read_dev(buf, max);
+}
+
+int
+cl_f::get_c(void)
+{
+  int c;
+  while (!check_dev())
+    ;
+  int i= read_dev(&c, 1);
+  if (i > 0)
+    return c;
+  else
+    return i;
+}
+
+chars
+cl_f::get_s(void)
+{
+  chars s= "";
+  char c;
+
+  if (eof())
+    return s;
+  c= get_c();
+  while ((c == '\n') ||
+	 (c == '\r'))
+    {
+      if (eof())
+	return s;
+      c= get_c();
+    }
+  if (eof())
+    return s;
+  s+= c;
+  c= get_c();
+  while (!eof() &&
+	 (c != '\n') &&
+	 (c != '\r'))
+    {
+      s+= c;
+      c= get_c();
+    }
+  return s;
 }
 
 

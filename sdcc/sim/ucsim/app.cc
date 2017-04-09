@@ -54,6 +54,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "cmd_getcl.h"
 #include "cmd_setcl.h"
 #include "newcmdposixcl.h"
+#include "cmdlexcl.h"
 
 bool jaj= false;
 
@@ -121,17 +122,16 @@ cl_app::run(void)
 	}
       if (rs == rs_read_files)
 	{
-	  if (sim->uc != NULL)
+	  if (sim && (sim->uc != NULL))
 	    {
 	      int i;
 	      for (i= 0; i < in_files->count; i++)
 		{
 		  char *fname= (char *)(in_files->at(i));
 		  long l;
-		  if ((l= sim->uc->read_hex_file(fname)) >= 0)
+		  if ((l= sim->uc->read_file(fname, NULL)) >= 0)
 		    {
-		      commander->all_printf("%ld words read from %s\n",
-					    l, fname);
+		      ///*commander->all_printf*/printf("%ld words read from %s\n", l, fname);
 		    }
 		}
 	    }
@@ -230,7 +230,7 @@ print_help(char *name)
      "               simulator interface. Known options are:\n"
      "                 if=memory[address]  turn on interface on given memory location"
      "                 in=file             specify input file for IO"
-     "                 out=file            spacify output file forr IO"
+     "                 out=file            specify output file forr IO"
      "  -p prompt    Specify string for prompt\n"
      "  -P           Prompt is a null ('\\0') character\n"
      "  -g           Go, start simulation\n"
@@ -649,6 +649,15 @@ cl_app::get_cmd(class cl_cmdline *cmdline)
   return(0);
 }
 
+long
+cl_app::eval(chars expr)
+{
+  expr_result= 0;
+  uc_yy_set_string_to_parse((char*)expr);
+  yyparse();
+  uc_yy_free_string_to_parse();
+  return expr_result;
+}
 
 /*
  * Messages to broadcast
