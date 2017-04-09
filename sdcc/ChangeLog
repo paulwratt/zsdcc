@@ -1,3 +1,65 @@
+2017-04-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCmem.c,
+	  support/regression/tests/z88dk.c,
+	  support/regression/tests/smallc.c,
+	  doc/sdccman.lyx:
+	  Support for __smallc callees.
+
+2017-04-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c:
+	  Fix bug #2570.
+	* src/SDCCmem.h,
+	  src/SDCCmem.c,
+	  src/z80/gen.c:
+	  Fix bug #2595.
+
+2017-04-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update documentation on _Bool / bool support.
+
+2017-03-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug3027957.c:
+	  Disable fixed-address test for host.
+
+2017-03-17 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCicode.c (geniCodeAdd): Fix bug #2568 fix
+
+2017-03-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.h,
+	  src/SDCCast.c,
+	  src/SDCCcse.c:
+	  Fix bug #2593.
+	* support/regression/tests/absolute.c,
+	  support/regression/tests/bug-2304.c,
+	  support/regression/tests/bug2686159.c,
+	  support/regression/tests/bug3027957.c:
+	  Fix bug #2584.
+	* src/SDCCicode.c,
+	  support/regression/tests/bug-2568.c:
+	  Fix bug #2568.
+
+2017-03-15 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c (checkZero): fix bug #2586
+
+2017-03-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/bug-2582.c:
+	  Fix bug #2582.
+
+2017-03-14 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCC.y: fixed bug #2587
+	* support/regression/tests/for.c: change to catch bug #2587
+	* support/regression/tests/bug-2590.c: disable test on host
+
 2017-03-13 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/z80/gen.c,

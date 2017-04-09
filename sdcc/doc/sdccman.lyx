@@ -9513,11 +9513,6 @@ Some features of this standard are not supported in some ports:
 \end_layout
 
 \begin_layout Itemize
-Support for _Bool / bool is incomplete (no pointers to bool, or bool inside
- a struct) in the mcs51 and ds390 ports.
-\end_layout
-
-\begin_layout Itemize
 There is no support for data types long long, unsigned long long, int_fast64_t,
  int_least64_t, int64_t, uint_fast64_t, uint_least64_t, uint64_t in the
  mcs51, ds390, ds400, pic14 and pic16 ports.
@@ -33270,11 +33265,10 @@ Small-C calling convention
 
 \begin_layout Standard
 Functions declared as __smallc are called using the Small-C calling convention.
- This way assembler routines orginally written for Small-C or code genrated
- by Small-C can be called from sdcc.
- Currently variable arguments are not supported and neither are function
- definitions using __smallc (as would be useful for calling sdcc-generated
- functions from Small-C.
+ This way assembler routines orginally written for Small-C or code generated
+ by Small-C can be called from SDCC.
+ Currently variable arguments are not yet supported (neither on the caller
+ nor on the callee side).
 \end_layout
 
 \begin_layout Section
@@ -43926,6 +43920,7 @@ There are three other calling conventions supported, which can be specified
  For __z88dk_callee, parameters are passed on the stack, but the stack is
  not adjusted for the parameters after the call (thus the callee has to
  do this instead).
+ __z88dk_callee is currently supportd on the caller side only.
  __z88dk_callee can be combined with __smallc.
 \end_layout
 
