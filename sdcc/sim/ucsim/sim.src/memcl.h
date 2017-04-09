@@ -133,6 +133,8 @@ public:
   virtual void set(t_addr addr, t_mem val)=0;
   virtual void set_bit1(t_addr addr, t_mem bits)=0;
   virtual void set_bit0(t_addr addr, t_mem bits)=0;
+
+  virtual void print_info(chars pre, class cl_console_base *con);
 };
 
 
@@ -266,7 +268,8 @@ class cl_memory_cell: public cl_cell_data
   virtual bool get_flag(enum cell_flag flag);
   virtual void set_flags(/*TYPE_UBYTE*/uchar what);
   virtual void set_flag(enum cell_flag flag, bool val);
-
+  virtual uchar get_width(void) { return width; }
+  
   virtual void un_decode(void);
   virtual void decode(class cl_memory_chip *chip, t_addr addr);
   virtual void decode(t_mem *data_ptr);
@@ -299,7 +302,8 @@ class cl_memory_cell: public cl_cell_data
   virtual void remove_hw(class cl_hw *hw);
   virtual class cl_event_handler *get_event_handler(void);
 
-  virtual void print_operators(class cl_console_base *con);
+  virtual void print_info(chars pre, class cl_console_base *con);
+  virtual void print_operators(cchars pre, class cl_console_base *con);
 };
 
 class cl_bit_cell: public cl_memory_cell
@@ -413,6 +417,8 @@ class cl_address_space: public cl_memory
   virtual void set_nuof_reads(unsigned long value) {}
   virtual void set_nuof_writes(unsigned long value) {}
 #endif
+
+  virtual void print_info(chars pre, class cl_console_base *con);
 };
 
 class cl_address_space_list: public cl_list
@@ -453,6 +459,8 @@ public:
   virtual void set(t_addr addr, t_mem val);
   virtual void set_bit1(t_addr addr, t_mem bits);
   virtual void set_bit0(t_addr addr, t_mem bits);
+
+  virtual void print_info(chars pre, class cl_console_base *con);
 };
 
   
@@ -496,17 +504,31 @@ public:
 class cl_banker: public cl_address_decoder
 {
  protected:
-  class cl_address_space *banker_as;
-  t_addr banker_addr;
-  t_mem banker_mask;
+  class cl_address_space *banker_as, *banker2_as;
+  t_addr banker_addr, banker2_addr;
+  t_mem banker_mask, banker2_mask;
+  //int banker_shift;
+  int banker2_shift;
   int nuof_banks;
   int bank;
   class cl_address_decoder **banks;
-  int shift_by;
+  int shift_by, shift2_by;
  public:
   cl_banker(class cl_address_space *the_banker_as,
 	    t_addr the_banker_addr,
 	    t_mem the_banker_mask,
+	    //int the_banker_shift,
+	    class cl_address_space *the_as,
+	    t_addr the_asb,
+	    t_addr the_ase);
+  cl_banker(class cl_address_space *the_banker_as,
+	    t_addr the_banker_addr,
+	    t_mem the_banker_mask,
+	    //int the_banker_shift,
+	    class cl_address_space *the_banker2_as,
+	    t_addr the_banker2_addr,
+	    t_mem the_banker2_mask,
+	    int the_banker2_shift,
 	    class cl_address_space *the_as,
 	    t_addr the_asb,
 	    t_addr the_ase);

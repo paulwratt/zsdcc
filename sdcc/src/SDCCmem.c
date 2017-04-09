@@ -607,10 +607,22 @@ allocGlobal (symbol * sym)
 /* allocParms - parameters are always passed on stack              */
 /*-----------------------------------------------------------------*/
 void
-allocParms (value * val)
+allocParms (value *val, bool smallc)
 {
   value *lval;
   int pNum = 1;
+  int stackParamSizeAdjust = 0;
+
+  if (IFFUNC_ISSMALLC (currFunc->type))
+    {
+      for (lval = val; lval; lval = lval->next)
+      {
+        if (IS_REGPARM (lval->etype))
+          continue;
+        stackParamSizeAdjust += getSize (lval->type);
+      }
+    }
+  stackPtr += stackParamSizeAdjust;
 
   for (lval = val; lval; lval = lval->next, pNum++)
     {
@@ -638,6 +650,7 @@ allocParms (value * val)
           if (options.useXstack)
             {
               /* PENDING: stack direction support */
+              wassertl (!smallc, "SmallC calling convention not yet supported for xstack callee");
               SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) = xstack;
               SPEC_STAK (lval->etype) = SPEC_STAK (lval->sym->etype) = lval->sym->stack =
                 xstackPtr - getSize (lval->type);
@@ -646,7 +659,7 @@ allocParms (value * val)
           else
             {                   /* use internal stack   */
               SPEC_OCLS (lval->etype) = SPEC_OCLS (lval->sym->etype) = istack;
-              if (port->stack.direction > 0)
+              if ((port->stack.direction > 0) ^(IFFUNC_ISSMALLC (currFunc->type)))
                 {
                   SPEC_STAK (lval->etype) = SPEC_STAK (lval->sym->etype) = lval->sym->stack =
                     stackPtr - (FUNC_REGBANK (currFunc->type) ? port->stack.bank_overhead : 0) -
@@ -706,6 +719,9 @@ allocParms (value * val)
           allocIntoSeg (lval->sym);
         }
     }
+
+  stackPtr -= stackParamSizeAdjust;
+
   return;
 }
 

@@ -478,6 +478,9 @@ hasSEFcalls (ast * tree)
        tree->opval.op == PCALL || tree->opval.op == '=' || tree->opval.op == INC_OP || tree->opval.op == DEC_OP))
     return TRUE;
 
+  if (astHasVolatile(tree))
+    return TRUE;
+
   return (hasSEFcalls (tree->left) | hasSEFcalls (tree->right));
 }
 
@@ -2014,7 +2017,7 @@ isLoopCountable (ast * initExpr, ast * condExpr, ast * loopExpr, symbol ** sym, 
 /* astHasVolatile - returns true if ast contains any volatile      */
 /*-----------------------------------------------------------------*/
 bool
-astHasVolatile (ast * tree)
+astHasVolatile (ast *tree)
 {
   if (!tree)
     return FALSE;
@@ -2997,12 +3000,18 @@ checkZero (value *val)
   if (!val)
     return;
 
-  if ((IS_FLOAT (val->type) || IS_FIXED16X16 (val->type)) && floatFromVal (val) == 0.0)
-    werror (E_DIVIDE_BY_ZERO);
-  else if (SPEC_LONGLONG (val->type) && ullFromVal (val) == 0LL)
-    werror (E_DIVIDE_BY_ZERO);
-  else if (ulFromVal (val) == 0L)
-    werror (E_DIVIDE_BY_ZERO);
+  if (IS_FLOAT (val->type) || IS_FIXED16X16 (val->type))
+    {
+	  if (floatFromVal (val) == 0.0)
+        werror (E_DIVIDE_BY_ZERO);
+    }
+  else if (SPEC_LONGLONG (val->type))
+    {
+	  if (ullFromVal (val) == 0LL)
+        werror (E_DIVIDE_BY_ZERO);
+	}
+  else if (ulFromVal (val) == 0L) {
+    werror (E_DIVIDE_BY_ZERO); }
 }
 
 /*--------------------------------------------------------------------*/
@@ -4079,7 +4088,8 @@ decorateType (ast *tree, RESULT_TYPE resultType)
         }
 
       /* if the left & right are equal then zero */
-      if (!hasSEFcalls(tree->left) && !hasSEFcalls(tree->right) && isAstEqual (tree->left, tree->right))
+      if (!hasSEFcalls(tree->left) && !hasSEFcalls(tree->right) &&
+        isAstEqual (tree->left, tree->right))
         {
           tree->type = EX_VALUE;
           tree->left = tree->right = NULL;
@@ -6852,40 +6862,28 @@ inlineTempVar (sym_link * type, int level)
 }
 
 /*-----------------------------------------------------------------*/
-/* inlineFindParmRecurse - recursive function for inlineFindParm   */
-/*-----------------------------------------------------------------*/
-static ast *
-inlineFindParmRecurse (ast * parms, int *index)
-{
-  if (!parms)
-    return NULL;
-
-  if (parms->type == EX_OP && parms->opval.op == PARAM)
-    {
-      ast *p;
-
-      p = inlineFindParmRecurse (parms->left, index);
-      if (p)
-        return p;
-      p = inlineFindParmRecurse (parms->right, index);
-      if (p)
-        return p;
-    }
-  if (!*index)
-    return parms;
-  (*index)--;
-  return NULL;
-}
-
-/*-----------------------------------------------------------------*/
 /* inlineFindParm - search an ast tree of parameters to find one   */
 /*                  at a particular index (0=first parameter).     */
-/*                  Returns NULL if not found.                     */
+/*                  Returns 0 if not found.                        */
 /*-----------------------------------------------------------------*/
 static ast *
-inlineFindParm (ast * parms, int index)
+inlineFindParm (ast *parms, int index)
 {
-  return inlineFindParmRecurse (parms, &index);
+  if (!parms)
+    return 0;
+
+  if (parms->type == EX_OP && parms->opval.op == PARAM)
+  {
+    ast *p;
+
+    if (p = inlineFindParm (parms->left, index))
+      return p;
+
+    if (p = inlineFindParm (parms->right, index - 1))
+      return p;
+  }
+
+  return (index ? 0 : parms);
 }
 
 static void expandInlineFuncs (ast * tree, ast * block);
@@ -7010,6 +7008,7 @@ expandInlineFuncs (ast * tree, ast * block)
           /* }                                                         */
           args = FUNC_ARGS (func->type);
           argIndex = 0;
+
           while (args)
             {
               symbol *temparg;
@@ -7041,6 +7040,9 @@ expandInlineFuncs (ast * tree, ast * block)
               args = args->next;
               argIndex++;
             }
+
+          if (inlineFindParm (tree->right, argIndex) && !IFFUNC_HASVARARGS (func->type))
+            werror (E_TOO_MANY_PARMS);
 
           /* Handle the return type */
           if (!IS_VOID (func->type->next))
@@ -7223,7 +7225,7 @@ createFunction (symbol * name, ast * body)
   if (FUNC_ISINLINE (name->type))
     name->funcTree = copyAst (body);
 
-  allocParms (FUNC_ARGS (name->type));  /* allocate the parameters */
+  allocParms (FUNC_ARGS (name->type), IFFUNC_ISSMALLC (name->type));  /* allocate the parameters */
 
   /* do processing for parameters that are passed in registers */
   processRegParms (FUNC_ARGS (name->type), body);
