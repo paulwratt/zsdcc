@@ -1,3 +1,39 @@
+2017-04-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peep.c:
+	  Minor improvement in Z180 support from z88dk patch.
+
+2017-04-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/smallc.c:
+	  Disable Small-C test for mcs51.
+
+2017-04-11 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c,
+	  support/regression/tests/bug-2596.c:
+	  Fix bug #2598 by not inlining calls to functions with variable arguments.
+
+2017-04-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCmem.c:
+	  Fix bug #2591.
+	* support/regression/tests/smallc.c:
+	  Do not try to test __smallc for host.
+	* src/SDCCsymt.c:
+	  Always specify signedness for char in debug dumps.
+	* support/regression/tests/bug-2539.c:
+	  Test for bug #2539.
+	* src/z80/peeph-z80.def,
+	  src/z80/peeph-tlcs90.def,
+	  src/z80/peeph-r2k.def:
+	  Fix bug #2597.
+	* src/SDCCglue.c:
+	  Fix bug #2574 (patch by Sebastian).
+	* src/mcs51/gen.c,
+	  support/regression/tests/gcc-torture-execute-921202-2.c:
+	  Fix bug #2542.
+
 2017-04-06 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCmem.c,
@@ -37583,4 +37619,4 @@
 	* as/mcs51/lklex.c:  accept everything as symbol name in rel-files, bug fix ID 452601
 	* as/mcs51/lksym.c:  accept everything as symbol name in rel-files, bug fix ID 452601
 
-$Revision: 9869 $
+$Revision: 9879 $

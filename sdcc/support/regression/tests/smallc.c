@@ -6,6 +6,10 @@
 #include <testfwk.h>
 #include <stdlib.h>
 
+#ifdef PORT_HOST
+#define __smallc
+#endif
+
 unsigned char f1(unsigned char c) __smallc
 {
 	return c + 1;
@@ -29,10 +33,12 @@ unsigned int s2(unsigned int c, unsigned int d) __smallc
 void
 testSmallC(void)
 {
+#ifndef __SDCC_mcs51
   ASSERT (f1 (23) == 24);
   ASSERT (f2 (23) == 24);
 
   ASSERT (s1 (42, 23) == 19);
   ASSERT (s2 (42, 23) == 19);
+#endif
 }
 
