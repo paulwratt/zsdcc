@@ -485,26 +485,29 @@ Grammar
   310 iteration_statement: while '(' expr ')' $@16 statement
   311                    | do statement WHILE '(' expr ')' ';'
   312                    | for '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
-  313                    | for '(' declaration expr_opt ';' expr_opt ')' statement
 
-  314 expr_opt: /* empty */
-  315         | expr
+  313 $@17: /* empty */
 
-  316 jump_statement: GOTO identifier ';'
-  317               | CONTINUE ';'
-  318               | BREAK ';'
-  319               | RETURN ';'
-  320               | RETURN expr ';'
+  314 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' $@17 statement
 
-  321 asm_string_literal: STRING_LITERAL
+  315 expr_opt: /* empty */
+  316         | expr
 
-  322 asm_statement: ASM '(' asm_string_literal ')' ';'
-  323              | INLINEASM ';'
+  317 jump_statement: GOTO identifier ';'
+  318               | CONTINUE ';'
+  319               | BREAK ';'
+  320               | RETURN ';'
+  321               | RETURN expr ';'
 
-  324 addressmod: ADDRESSMOD identifier identifier ';'
-  325           | ADDRESSMOD identifier SD_CONST identifier ';'
+  322 asm_string_literal: STRING_LITERAL
 
-  326 identifier: IDENTIFIER
+  323 asm_statement: ASM '(' asm_string_literal ')' ';'
+  324              | INLINEASM ';'
+
+  325 addressmod: ADDRESSMOD identifier identifier ';'
+  326           | ADDRESSMOD identifier SD_CONST identifier ';'
+
+  327 identifier: IDENTIFIER
 
 
 Terminals, with rules where they appear
@@ -514,9 +517,9 @@ $end (0) 0
 '%' (37) 79
 '&' (38) 68 95
 '(' (40) 29 39 41 49 50 64 65 67 75 156 157 227 230 232 233 255 260
-    261 262 264 270 303 305 310 311 312 313 322
+    261 262 264 270 303 305 310 311 312 314 323
 ')' (41) 29 39 41 49 50 64 65 67 75 156 157 227 230 232 233 255 260
-    261 262 264 270 303 305 310 311 312 313 322
+    261 262 264 270 303 305 310 311 312 314 323
 '*' (42) 69 77 238
 '+' (43) 70 81
 ',' (44) 41 43 58 67 124 139 204 213 214 243 245 247 267 269 270
@@ -524,8 +527,8 @@ $end (0) 0
 '.' (46) 34 52 148
 '/' (47) 78
 ':' (58) 44 45 108 206 207 283 284 286
-';' (59) 126 127 128 202 293 298 299 311 312 313 316 317 318 319 320
-    322 323 324 325
+';' (59) 126 127 128 202 293 298 299 311 312 314 317 318 319 320 321
+    323 324 325 326
 '<' (60) 87
 '=' (61) 111 141 144 216
 '>' (62) 88
@@ -538,7 +541,7 @@ $end (0) 0
 '}' (125) 193 209 210 266 267 282 288
 '~' (126) 72
 error (256) 293
-IDENTIFIER (258) 326
+IDENTIFIER (258) 327
 TYPE_NAME (259) 184
 ADDRSPACE_NAME (260) 171
 CONSTANT (261) 37
@@ -578,7 +581,7 @@ INTERRUPT (294) 158 159
 SFR (295) 188 189
 SFR16 (296) 190
 SFR32 (297) 191
-ADDRESSMOD (298) 324 325
+ADDRESSMOD (298) 325 326
 STATIC_ASSERT (299) 270
 AT (300) 181
 SBIT (301) 186
@@ -604,7 +607,7 @@ UNSIGNED (320) 166
 SD_FLOAT (321) 172
 DOUBLE (322)
 FIXED16X16 (323) 173
-SD_CONST (324) 168 325
+SD_CONST (324) 168 326
 VOLATILE (325) 169
 SD_VOID (326) 167
 BIT (327) 180
@@ -621,16 +624,16 @@ SWITCH (337) 305
 WHILE (338) 306 311
 DO (339) 307
 FOR (340) 308
-GOTO (341) 316
-CONTINUE (342) 317
-BREAK (343) 318
-RETURN (344) 319 320
+GOTO (341) 317
+CONTINUE (342) 318
+BREAK (343) 319
+RETURN (344) 320 321
 NAKED (345) 17
 JAVANATIVE (346) 18
 OVERLAY (347) 19
 TRAP (348) 25
-STRING_LITERAL (349) 46 270 321
-INLINEASM (350) 323
+STRING_LITERAL (349) 46 270 322
+INLINEASM (350) 324
 IFX (351)
 ADDRESS_OF (352)
 GET_VALUE_AT_ADDRESS (353)
@@ -672,7 +675,7 @@ ALIGNAS (388) 156 157
 GENERIC (389) 41
 GENERIC_ASSOC_LIST (390)
 GENERIC_ASSOCIATION (391)
-ASM (392) 322
+ASM (392) 323
 
 
 Nonterminals, with rules where they appear
@@ -762,14 +765,14 @@ assignment_operator (201)
     110
 expr (202)
     on left: 122 124, on right: 35 39 48 108 124 299 303 305 310 311
-    315 320
+    316 321
 $@9 (203)
     on left: 123, on right: 124
 constant_expr (204)
     on left: 125, on right: 14 147 157 159 181 206 207 216 229 257
     259 270 284
 declaration (205)
-    on left: 126 127 128, on right: 6 294 295 313
+    on left: 126 127 128, on right: 6 294 295 314
 declaration_specifiers (206)
     on left: 129, on right: 11 126 127 248 250 251
 declaration_specifiers_ (207)
@@ -876,7 +879,7 @@ static_assert_declaration (255)
     on left: 270, on right: 128
 statement (256)
     on left: 271 272 273 274 275 276 277 278, on right: 280 281 296
-    297 300 303 305 310 311 312 313
+    297 300 303 305 310 311 312 314
 critical (257)
     on left: 279, on right: 280
 critical_statement (258)
@@ -912,24 +915,26 @@ while (272)
 do (273)
     on left: 307, on right: 311
 for (274)
-    on left: 308, on right: 312 313
+    on left: 308, on right: 312 314
 iteration_statement (275)
-    on left: 310 311 312 313, on right: 275
+    on left: 310 311 312 314, on right: 275
 $@16 (276)
     on left: 309, on right: 310
-expr_opt (277)
-    on left: 314 315, on right: 312 313
-jump_statement (278)
-    on left: 316 317 318 319 320, on right: 276
-asm_string_literal (279)
-    on left: 321, on right: 322
-asm_statement (280)
-    on left: 322 323, on right: 278
-addressmod (281)
-    on left: 324 325, on right: 7
-identifier (282)
-    on left: 326, on right: 32 34 36 52 54 148 199 210 211 215 226
-    242 243 283 316 324 325
+$@17 (277)
+    on left: 313, on right: 314
+expr_opt (278)
+    on left: 315 316, on right: 312 314
+jump_statement (279)
+    on left: 317 318 319 320 321, on right: 276
+asm_string_literal (280)
+    on left: 322, on right: 323
+asm_statement (281)
+    on left: 323 324, on right: 278
+addressmod (282)
+    on left: 325 326, on right: 7
+identifier (283)
+    on left: 327, on right: 32 34 36 52 54 148 199 210 211 215 226
+    242 243 283 317 325 326
 
 
 state 0
@@ -1012,9 +1017,9 @@ state 0
 
 state 1
 
-  326 identifier: IDENTIFIER .
+  327 identifier: IDENTIFIER .
 
-    $default  reduce using rule 326 (identifier)
+    $default  reduce using rule 327 (identifier)
 
 
 state 2
@@ -1106,8 +1111,8 @@ state 13
 
 state 14
 
-  324 addressmod: ADDRESSMOD . identifier identifier ';'
-  325           | ADDRESSMOD . identifier SD_CONST identifier ';'
+  325 addressmod: ADDRESSMOD . identifier identifier ';'
+  326           | ADDRESSMOD . identifier SD_CONST identifier ';'
 
     IDENTIFIER  shift, and go to state 1
 
@@ -1948,8 +1953,8 @@ state 70
 
 state 71
 
-  324 addressmod: ADDRESSMOD identifier . identifier ';'
-  325           | ADDRESSMOD identifier . SD_CONST identifier ';'
+  325 addressmod: ADDRESSMOD identifier . identifier ';'
+  326           | ADDRESSMOD identifier . SD_CONST identifier ';'
 
     IDENTIFIER  shift, and go to state 1
     SD_CONST    shift, and go to state 159
@@ -3261,7 +3266,7 @@ state 158
 
 state 159
 
-  325 addressmod: ADDRESSMOD identifier SD_CONST . identifier ';'
+  326 addressmod: ADDRESSMOD identifier SD_CONST . identifier ';'
 
     IDENTIFIER  shift, and go to state 1
 
@@ -3270,7 +3275,7 @@ state 159
 
 state 160
 
-  324 addressmod: ADDRESSMOD identifier identifier . ';'
+  325 addressmod: ADDRESSMOD identifier identifier . ';'
 
     ';'  shift, and go to state 237
 
@@ -5008,16 +5013,16 @@ state 235
 
 state 236
 
-  325 addressmod: ADDRESSMOD identifier SD_CONST identifier . ';'
+  326 addressmod: ADDRESSMOD identifier SD_CONST identifier . ';'
 
     ';'  shift, and go to state 348
 
 
 state 237
 
-  324 addressmod: ADDRESSMOD identifier identifier ';' .
+  325 addressmod: ADDRESSMOD identifier identifier ';' .
 
-    $default  reduce using rule 324 (addressmod)
+    $default  reduce using rule 325 (addressmod)
 
 
 state 238
@@ -6036,7 +6041,7 @@ state 310
 
 state 311
 
-  316 jump_statement: GOTO . identifier ';'
+  317 jump_statement: GOTO . identifier ';'
 
     IDENTIFIER  shift, and go to state 1
 
@@ -6045,22 +6050,22 @@ state 311
 
 state 312
 
-  317 jump_statement: CONTINUE . ';'
+  318 jump_statement: CONTINUE . ';'
 
     ';'  shift, and go to state 391
 
 
 state 313
 
-  318 jump_statement: BREAK . ';'
+  319 jump_statement: BREAK . ';'
 
     ';'  shift, and go to state 392
 
 
 state 314
 
-  319 jump_statement: RETURN . ';'
-  320               | RETURN . expr ';'
+  320 jump_statement: RETURN . ';'
+  321               | RETURN . expr ';'
 
     IDENTIFIER      shift, and go to state 1
     CONSTANT        shift, and go to state 73
@@ -6106,14 +6111,14 @@ state 314
 
 state 315
 
-  323 asm_statement: INLINEASM . ';'
+  324 asm_statement: INLINEASM . ';'
 
     ';'  shift, and go to state 395
 
 
 state 316
 
-  322 asm_statement: ASM . '(' asm_string_literal ')' ';'
+  323 asm_statement: ASM . '(' asm_string_literal ')' ';'
 
     '('  shift, and go to state 396
 
@@ -6647,7 +6652,7 @@ state 332
 state 333
 
   312 iteration_statement: for . '(' expr_opt ';' expr_opt ';' expr_opt ')' statement
-  313                    | for . '(' declaration expr_opt ';' expr_opt ')' statement
+  314                    | for . '(' declaration expr_opt ';' expr_opt ')' $@17 statement
 
     '('  shift, and go to state 407
 
@@ -6781,9 +6786,9 @@ state 347
 
 state 348
 
-  325 addressmod: ADDRESSMOD identifier SD_CONST identifier ';' .
+  326 addressmod: ADDRESSMOD identifier SD_CONST identifier ';' .
 
-    $default  reduce using rule 325 (addressmod)
+    $default  reduce using rule 326 (addressmod)
 
 
 state 349
@@ -7484,36 +7489,36 @@ state 389
 
 state 390
 
-  316 jump_statement: GOTO identifier . ';'
+  317 jump_statement: GOTO identifier . ';'
 
     ';'  shift, and go to state 450
 
 
 state 391
 
-  317 jump_statement: CONTINUE ';' .
-
-    $default  reduce using rule 317 (jump_statement)
-
-
-state 392
-
-  318 jump_statement: BREAK ';' .
+  318 jump_statement: CONTINUE ';' .
 
     $default  reduce using rule 318 (jump_statement)
 
 
-state 393
+state 392
 
-  319 jump_statement: RETURN ';' .
+  319 jump_statement: BREAK ';' .
 
     $default  reduce using rule 319 (jump_statement)
+
+
+state 393
+
+  320 jump_statement: RETURN ';' .
+
+    $default  reduce using rule 320 (jump_statement)
 
 
 state 394
 
   124 expr: expr . ',' $@9 assignment_expr
-  320 jump_statement: RETURN expr . ';'
+  321 jump_statement: RETURN expr . ';'
 
     ','  shift, and go to state 256
     ';'  shift, and go to state 451
@@ -7521,14 +7526,14 @@ state 394
 
 state 395
 
-  323 asm_statement: INLINEASM ';' .
+  324 asm_statement: INLINEASM ';' .
 
-    $default  reduce using rule 323 (asm_statement)
+    $default  reduce using rule 324 (asm_statement)
 
 
 state 396
 
-  322 asm_statement: ASM '(' . asm_string_literal ')' ';'
+  323 asm_statement: ASM '(' . asm_string_literal ')' ';'
 
     STRING_LITERAL  shift, and go to state 452
 
@@ -7719,7 +7724,7 @@ state 406
 state 407
 
   312 iteration_statement: for '(' . expr_opt ';' expr_opt ';' expr_opt ')' statement
-  313                    | for '(' . declaration expr_opt ';' expr_opt ')' statement
+  314                    | for '(' . declaration expr_opt ';' expr_opt ')' $@17 statement
 
     IDENTIFIER      shift, and go to state 1
     TYPE_NAME       shift, and go to state 2
@@ -7778,7 +7783,7 @@ state 407
     '~'             shift, and go to state 87
     '!'             shift, and go to state 88
 
-    $default  reduce using rule 314 (expr_opt)
+    $default  reduce using rule 315 (expr_opt)
 
     primary_expr               go to state 89
     generic_selection          go to state 90
@@ -8401,28 +8406,28 @@ state 449
 
 state 450
 
-  316 jump_statement: GOTO identifier ';' .
+  317 jump_statement: GOTO identifier ';' .
 
-    $default  reduce using rule 316 (jump_statement)
+    $default  reduce using rule 317 (jump_statement)
 
 
 state 451
 
-  320 jump_statement: RETURN expr ';' .
+  321 jump_statement: RETURN expr ';' .
 
-    $default  reduce using rule 320 (jump_statement)
+    $default  reduce using rule 321 (jump_statement)
 
 
 state 452
 
-  321 asm_string_literal: STRING_LITERAL .
+  322 asm_string_literal: STRING_LITERAL .
 
-    $default  reduce using rule 321 (asm_string_literal)
+    $default  reduce using rule 322 (asm_string_literal)
 
 
 state 453
 
-  322 asm_statement: ASM '(' asm_string_literal . ')' ';'
+  323 asm_statement: ASM '(' asm_string_literal . ')' ';'
 
     ')'  shift, and go to state 481
 
@@ -8453,16 +8458,16 @@ state 456
 state 457
 
   124 expr: expr . ',' $@9 assignment_expr
-  315 expr_opt: expr .
+  316 expr_opt: expr .
 
     ','  shift, and go to state 256
 
-    $default  reduce using rule 315 (expr_opt)
+    $default  reduce using rule 316 (expr_opt)
 
 
 state 458
 
-  313 iteration_statement: for '(' declaration . expr_opt ';' expr_opt ')' statement
+  314 iteration_statement: for '(' declaration . expr_opt ';' expr_opt ')' $@17 statement
 
     IDENTIFIER      shift, and go to state 1
     CONSTANT        shift, and go to state 73
@@ -8482,7 +8487,7 @@ state 458
     '~'             shift, and go to state 87
     '!'             shift, and go to state 88
 
-    $default  reduce using rule 314 (expr_opt)
+    $default  reduce using rule 315 (expr_opt)
 
     primary_expr         go to state 89
     generic_selection    go to state 90
@@ -8925,7 +8930,7 @@ state 480
 
 state 481
 
-  322 asm_statement: ASM '(' asm_string_literal ')' . ';'
+  323 asm_statement: ASM '(' asm_string_literal ')' . ';'
 
     ';'  shift, and go to state 497
 
@@ -8986,7 +8991,7 @@ state 483
 
 state 484
 
-  313 iteration_statement: for '(' declaration expr_opt . ';' expr_opt ')' statement
+  314 iteration_statement: for '(' declaration expr_opt . ';' expr_opt ')' $@17 statement
 
     ';'  shift, and go to state 500
 
@@ -9013,7 +9018,7 @@ state 485
     '~'             shift, and go to state 87
     '!'             shift, and go to state 88
 
-    $default  reduce using rule 314 (expr_opt)
+    $default  reduce using rule 315 (expr_opt)
 
     primary_expr         go to state 89
     generic_selection    go to state 90
@@ -9262,9 +9267,9 @@ state 496
 
 state 497
 
-  322 asm_statement: ASM '(' asm_string_literal ')' ';' .
+  323 asm_statement: ASM '(' asm_string_literal ')' ';' .
 
-    $default  reduce using rule 322 (asm_statement)
+    $default  reduce using rule 323 (asm_statement)
 
 
 state 498
@@ -9355,7 +9360,7 @@ state 499
 
 state 500
 
-  313 iteration_statement: for '(' declaration expr_opt ';' . expr_opt ')' statement
+  314 iteration_statement: for '(' declaration expr_opt ';' . expr_opt ')' $@17 statement
 
     IDENTIFIER      shift, and go to state 1
     CONSTANT        shift, and go to state 73
@@ -9375,7 +9380,7 @@ state 500
     '~'             shift, and go to state 87
     '!'             shift, and go to state 88
 
-    $default  reduce using rule 314 (expr_opt)
+    $default  reduce using rule 315 (expr_opt)
 
     primary_expr         go to state 89
     generic_selection    go to state 90
@@ -9457,7 +9462,7 @@ state 507
 
 state 508
 
-  313 iteration_statement: for '(' declaration expr_opt ';' expr_opt . ')' statement
+  314 iteration_statement: for '(' declaration expr_opt ';' expr_opt . ')' $@17 statement
 
     ')'  shift, and go to state 513
 
@@ -9484,7 +9489,7 @@ state 509
     '~'             shift, and go to state 87
     '!'             shift, and go to state 88
 
-    $default  reduce using rule 314 (expr_opt)
+    $default  reduce using rule 315 (expr_opt)
 
     primary_expr         go to state 89
     generic_selection    go to state 90
@@ -9603,79 +9608,11 @@ state 512
 
 state 513
 
-  313 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' . statement
+  314 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' . $@17 statement
 
-    error           shift, and go to state 218
-    IDENTIFIER      shift, and go to state 1
-    CONSTANT        shift, and go to state 73
-    SIZEOF          shift, and go to state 74
-    ALIGNOF         shift, and go to state 75
-    TYPEOF          shift, and go to state 76
-    OFFSETOF        shift, and go to state 77
-    INC_OP          shift, and go to state 78
-    DEC_OP          shift, and go to state 79
-    CRITICAL        shift, and go to state 303
-    CASE            shift, and go to state 304
-    DEFAULT         shift, and go to state 305
-    IF              shift, and go to state 306
-    SWITCH          shift, and go to state 307
-    WHILE           shift, and go to state 308
-    DO              shift, and go to state 309
-    FOR             shift, and go to state 310
-    GOTO            shift, and go to state 311
-    CONTINUE        shift, and go to state 312
-    BREAK           shift, and go to state 313
-    RETURN          shift, and go to state 314
-    STRING_LITERAL  shift, and go to state 80
-    INLINEASM       shift, and go to state 315
-    GENERIC         shift, and go to state 81
-    ASM             shift, and go to state 316
-    '('             shift, and go to state 82
-    '&'             shift, and go to state 83
-    '*'             shift, and go to state 84
-    '+'             shift, and go to state 85
-    '-'             shift, and go to state 86
-    '~'             shift, and go to state 87
-    '!'             shift, and go to state 88
-    ';'             shift, and go to state 317
-    '{'             shift, and go to state 219
+    $default  reduce using rule 313 ($@17)
 
-    primary_expr          go to state 89
-    generic_selection     go to state 90
-    string_literal_val    go to state 91
-    postfix_expr          go to state 92
-    unary_expr            go to state 93
-    unary_operator        go to state 94
-    cast_expr             go to state 171
-    multiplicative_expr   go to state 96
-    additive_expr         go to state 97
-    shift_expr            go to state 98
-    relational_expr       go to state 99
-    equality_expr         go to state 100
-    and_expr              go to state 101
-    exclusive_or_expr     go to state 102
-    inclusive_or_expr     go to state 103
-    logical_and_expr      go to state 104
-    logical_or_expr       go to state 105
-    conditional_expr      go to state 172
-    assignment_expr       go to state 173
-    expr                  go to state 319
-    statement             go to state 516
-    critical              go to state 321
-    critical_statement    go to state 322
-    labeled_statement     go to state 323
-    label                 go to state 324
-    start_block           go to state 223
-    compound_statement    go to state 326
-    expression_statement  go to state 329
-    selection_statement   go to state 330
-    while                 go to state 331
-    do                    go to state 332
-    for                   go to state 333
-    iteration_statement   go to state 334
-    jump_statement        go to state 335
-    asm_statement         go to state 336
-    identifier            go to state 337
+    $@17  go to state 516
 
 
 state 514
@@ -9694,14 +9631,7 @@ state 515
 
 state 516
 
-  313 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' statement .
-
-    $default  reduce using rule 313 (iteration_statement)
-
-
-state 517
-
-  312 iteration_statement: for '(' expr_opt ';' expr_opt ';' expr_opt ')' . statement
+  314 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' $@17 . statement
 
     error           shift, and go to state 218
     IDENTIFIER      shift, and go to state 1
@@ -9776,7 +9706,91 @@ state 517
     identifier            go to state 337
 
 
+state 517
+
+  312 iteration_statement: for '(' expr_opt ';' expr_opt ';' expr_opt ')' . statement
+
+    error           shift, and go to state 218
+    IDENTIFIER      shift, and go to state 1
+    CONSTANT        shift, and go to state 73
+    SIZEOF          shift, and go to state 74
+    ALIGNOF         shift, and go to state 75
+    TYPEOF          shift, and go to state 76
+    OFFSETOF        shift, and go to state 77
+    INC_OP          shift, and go to state 78
+    DEC_OP          shift, and go to state 79
+    CRITICAL        shift, and go to state 303
+    CASE            shift, and go to state 304
+    DEFAULT         shift, and go to state 305
+    IF              shift, and go to state 306
+    SWITCH          shift, and go to state 307
+    WHILE           shift, and go to state 308
+    DO              shift, and go to state 309
+    FOR             shift, and go to state 310
+    GOTO            shift, and go to state 311
+    CONTINUE        shift, and go to state 312
+    BREAK           shift, and go to state 313
+    RETURN          shift, and go to state 314
+    STRING_LITERAL  shift, and go to state 80
+    INLINEASM       shift, and go to state 315
+    GENERIC         shift, and go to state 81
+    ASM             shift, and go to state 316
+    '('             shift, and go to state 82
+    '&'             shift, and go to state 83
+    '*'             shift, and go to state 84
+    '+'             shift, and go to state 85
+    '-'             shift, and go to state 86
+    '~'             shift, and go to state 87
+    '!'             shift, and go to state 88
+    ';'             shift, and go to state 317
+    '{'             shift, and go to state 219
+
+    primary_expr          go to state 89
+    generic_selection     go to state 90
+    string_literal_val    go to state 91
+    postfix_expr          go to state 92
+    unary_expr            go to state 93
+    unary_operator        go to state 94
+    cast_expr             go to state 171
+    multiplicative_expr   go to state 96
+    additive_expr         go to state 97
+    shift_expr            go to state 98
+    relational_expr       go to state 99
+    equality_expr         go to state 100
+    and_expr              go to state 101
+    exclusive_or_expr     go to state 102
+    inclusive_or_expr     go to state 103
+    logical_and_expr      go to state 104
+    logical_or_expr       go to state 105
+    conditional_expr      go to state 172
+    assignment_expr       go to state 173
+    expr                  go to state 319
+    statement             go to state 519
+    critical              go to state 321
+    critical_statement    go to state 322
+    labeled_statement     go to state 323
+    label                 go to state 324
+    start_block           go to state 223
+    compound_statement    go to state 326
+    expression_statement  go to state 329
+    selection_statement   go to state 330
+    while                 go to state 331
+    do                    go to state 332
+    for                   go to state 333
+    iteration_statement   go to state 334
+    jump_statement        go to state 335
+    asm_statement         go to state 336
+    identifier            go to state 337
+
+
 state 518
+
+  314 iteration_statement: for '(' declaration expr_opt ';' expr_opt ')' $@17 statement .
+
+    $default  reduce using rule 314 (iteration_statement)
+
+
+state 519
 
   312 iteration_statement: for '(' expr_opt ';' expr_opt ';' expr_opt ')' statement .
 

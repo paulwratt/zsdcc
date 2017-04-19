@@ -1513,7 +1513,7 @@ ftab[] =                                            // sorted on the number of t
     "operandsNotRelated", operandsNotRelated        // 28
   },
   {
-    "same", same
+    "same", same                                    // z88dk z80
   },
   {
     "labelJTInRange", labelJTInRange                // 13
@@ -2031,14 +2031,13 @@ matchLine (char *s, char *d, hTab ** vars)
           while (ISCHARSPACE (*d))
             d++;
         }
-
-      /* they should be an exact match other wise */
-      if (*s && *d)
+      else if (*s && *d)
         {
-          if (*s++ != *d++)
-            return FALSE;
-        }
+          /* they should be an exact match otherwise */
 
+          if (*s++ != *d++)
+              return FALSE;
+        }
     }
 
   /* get rid of the trailing spaces
