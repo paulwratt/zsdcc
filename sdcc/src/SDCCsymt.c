@@ -1222,7 +1222,7 @@ bitsForType (sym_link * p)
 /* copySymbolChain - copies a symbol chain                          */
 /*------------------------------------------------------------------*/
 symbol *
-copySymbolChain (symbol * src)
+copySymbolChain (const symbol * src)
 {
   symbol *dest;
 
@@ -1238,7 +1238,7 @@ copySymbolChain (symbol * src)
 /* copySymbol - makes a copy of a symbol                            */
 /*------------------------------------------------------------------*/
 symbol *
-copySymbol (symbol * src)
+copySymbol (const symbol * src)
 {
   symbol *dest;
 
@@ -2001,9 +2001,10 @@ checkDecl (symbol * sym, int isProto)
 /* copyLinkChain - makes a copy of the link chain & rets ptr 2 head */
 /*------------------------------------------------------------------*/
 sym_link *
-copyLinkChain (sym_link * p)
+copyLinkChain (const sym_link *p)
 {
-  sym_link *head, *curr, *loop;
+  sym_link *head, *loop;
+  const sym_link *curr;
 
   /* note: v_struct and v_struct->fields are not copied! */
   curr = p;
@@ -2191,9 +2192,12 @@ computeType (sym_link * type1, sym_link * type2, RESULT_TYPE resultType, int op)
       /* Otherwise fall through to the general case */
     }
 
+  /* shift operators have the important type in the left operand */
+  if (op == LEFT_OP || op == RIGHT_OP)
+    rType = copyLinkChain(type1);
 
   /* if one of them is a pointer or array then that prevails */
-  if (IS_PTR (type1) || IS_ARRAY (type1))
+  else if (IS_PTR (type1) || IS_ARRAY (type1))
     rType = copyLinkChain (type1);
   else if (IS_PTR (type2) || IS_ARRAY (type2))
     rType = copyLinkChain (type2);
@@ -4411,6 +4415,7 @@ newEnumType (symbol * enumlist)
   else if (min >= -128 && max <= 127)
     {
       SPEC_NOUN (type) = V_CHAR;
+	  SPEC_SIGN (type) = 1;
     }
   else if (min >= 0 && max <= 65535)
     {

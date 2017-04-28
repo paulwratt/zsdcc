@@ -1,3 +1,49 @@
+2017-04-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCast.c,
+	  src/SDCCicode.c,
+	  support/regression/tests/bug-2601.c,
+	  support/regression/tests/bug3537338.c,
+	  support/regression/tests/gcc-torture-execute-20021120-1.c:
+	  Fix bug #2602.
+	* src/SDCCsymt.h,
+	  src/SDCCsymt.c:
+	  Minor improvements for const-correctness.
+	* src/SDCCpeeph.c:
+	  Fix bug #2600.
+
+2017-04-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2590.c:
+	  Enable for all z80-related backends.
+	* support/regression/tests/bug-2601.c:
+	  Disable for ds390.
+
+2017-04-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* doc/sdccman.lyx:
+	  Update manual for --std-sdcc99 vs. --std-c11 change.
+	* device/lib/tlcs90/crt0.s:
+	  Fix bug #2583.
+
+2017-04-27 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/SDCCsymt.c (newEnumType): fixed bug 2545
+	* support/regression/tests/enum.c: added test
+	* support/regression/tests/bug-2590.c: disabled for non-z80
+
+2017-04-26 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* src/ds390/gen.c (assignBit): disabled to fix a warning
+	* src/SDCCicode.c (geniCodeLeftShift): fixed bug, replaced TABs
+	* src/SDCCralloc.hpp (create_cfg): fixed warning, replaced TABs
+	* src/SDCCsymt.c (computeType): fixed bug #2585
+	* src/stm8/ralloc2.cc (assign_operands_for_cost): fixed warning, replaced TABs
+	* src/z80/gen.c (genLeftShift, genRightShift): fixed warning
+	* src/z80/peep.c (z80SurelyWrites): fixed warning
+	* support/regression/tests/gcc-torture-execute-20020201-1.c
+	* support/regression/tests/bug-2585.c: new, added
+
 2017-04-24 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCCast.c,
@@ -1920,7 +1966,7 @@
 2016-02-05 Ben Shi <powerstudio1st AT 163 DOT com>
 
 	* src/SDCCast.c
-	  Fix a bug in comparason operaion.
+	  Fix a bug in comparison operation.
 	* support/regression/tests/memory.c
 	  Enable more tests.
 
@@ -1937,7 +1983,7 @@
 	  Fix compare operator, patch #267 by Peter Dons Tychsen.
 	* device/lib/pic16/libsdcc/char/divschar.c,
 	  device/lib/pic16/libsdcc/char/modschar.c:
-	  Fix signedness of pci16 char support routines.
+	  Fix signedness of pic16 char support routines.
 
 2016-02-01 Ben Shi <powerstudio1st AT 163 DOT com>
  
