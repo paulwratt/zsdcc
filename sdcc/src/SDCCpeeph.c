@@ -1997,14 +1997,14 @@ matchLine (char *s, const char *d, hTab ** vars)
   if (!s || !(*s))
     return FALSE;
 
-  /* skip leading white spaces */
-  while (ISCHARSPACE (*s))
-    s++;
-  while (ISCHARSPACE (*d))
-    d++;
-
   while (*s && *d)
     {
+      /* skip white space in both */
+      while (ISCHARSPACE(*s))
+          s++;
+      while (ISCHARSPACE(*d))
+          d++;
+
       /* if the destination is a var */
       if (*d == '%' && ISCHARDIGIT (*(d + 1)) && vars)
         {
@@ -2024,13 +2024,6 @@ matchLine (char *s, const char *d, hTab ** vars)
           /* in either case go past the variable */
           d++;
           while (ISCHARDIGIT (*d))
-            d++;
-        }
-      else if (ISCHARSPACE (*s) && ISCHARSPACE (*d)) /* whitespace sequences match any whitespace sequences */
-        {
-          while (ISCHARSPACE (*s))
-            s++;
-          while (ISCHARSPACE (*d))
             d++;
         }
       else if (*s && *d)
