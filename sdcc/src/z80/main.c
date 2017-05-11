@@ -119,6 +119,7 @@ static char *_keywords[] = {
   "interrupt",
   "z88dk_fastcall",
   "z88dk_callee",
+  "smallc",
   NULL
 };
 
@@ -131,6 +132,7 @@ static char *_keywordsgb[] = {
   "critical",
   "interrupt",
   "z88dk_callee",
+  "smallc",
   NULL
 };
 
@@ -143,6 +145,7 @@ static char *_keywordstlcs90[] = {
   "interrupt",
   "z88dk_fastcall",
   "z88dk_callee",
+  "smallc",
   NULL
 };
 
@@ -933,14 +936,12 @@ PORT z80_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _z80_init,
@@ -1061,14 +1062,12 @@ PORT z180_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _z180_init,
@@ -1188,14 +1187,12 @@ PORT r2k_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _r2k_init,
@@ -1316,14 +1313,12 @@ PORT r3ka_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _r3ka_init,
@@ -1446,14 +1441,12 @@ PORT gbz80_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _gbz80_init,
@@ -1574,14 +1567,12 @@ PORT tlcs90_port =
   { -1, FALSE },
   { z80_emitDebuggerSymbol },
   {
-    255,                        /* maxCount */
+    256,                        /* maxCount */
     3,                          /* sizeofElement */
-    /* The rest of these costs are bogus. They approximate */
-    /* the behavior of src/SDCCicode.c 1.207 and earlier.  */
-    {4, 4, 4},                  /* sizeofMatchJump[] */
-    {0, 0, 0},                  /* sizeofRangeCompare[] */
-    0,                          /* sizeofSubtract */
-    3,                          /* sizeofDispatch */
+    {6, 7, 8},                  /* sizeofMatchJump[] - Assumes operand allocated to registers */
+    {6, 9, 15},                 /* sizeofRangeCompare[] - Assumes operand allocated to registers*/
+    1,                          /* sizeofSubtract - Assumes use of a singel inc or dec */
+    9,                          /* sizeofDispatch - Assumes operand allocated to register e or c*/
   },
   "_",
   _tlcs90_init,
