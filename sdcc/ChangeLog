@@ -1,3 +1,76 @@
+2017-05-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdwarf2.c:
+	  Fix encoding DWARF info for _Bool, explicitly specify for char.
+
+2017-05-09 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c,
+	  src/z80/gen.c:
+	  Better code for switch statements.
+
+2017-05-08 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/tests/inline.c: oops, wrong place to skip bug_2591
+
+2017-05-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/peeph-z80.def,
+	  src/z80/ralloc.c,
+	  src/z80/ralloc2.cc:
+	  Improve handling of 8-bit parameters.
+
+2017-05-07 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* support/regression/fwk/lib/extern1.c: renamed bug2591 to bug_2591
+	* support/regression/tests/inline.c: skip bug_2591 for old buggy GCC
+
+2017-05-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Optimize computations on shift counts.
+	* src/stm8/gen.c:
+	  Fix bug in register handling in shifts.
+	* src/z80/gen.c:
+	  Optimize computations on shift counts, fix bug in register handling of wide shifts.
+
+2017-05-06 Maarten Brock <sourceforge.brock AT dse.nl>
+
+	* doc/sdccman.lyx: fixed typo
+	* sim/ucsim/gui.src/Makefile.in: use $(AR)
+	* src/mcs51/gen.c: cosmetic
+	* src/SDCC.lex,
+	* src/stm8/main.c,
+	* src/z80/main.c: make __smallc a target specific keyword 
+	* src/SDCCicode.c (geniCodeAdd): take generic pointers into account
+	* src/z80/ralloc2.cc (assign_operands_for_cost): fix warning, remove TABs
+	* support/regression/fwk/lib/extern1.c,
+	* support/regression/tests/inline.c: added bug2591 test
+	* support/regression/tests/bug-2601.c: test with several pointer sizes
+	* support/regression/tests/bug-2590.c,
+	* support/regression/tests/smallc.c,
+	* support/regression/tests/z88dk.c: test __smallc only on stm8 & z80-like
+
+2017-05-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2188.c,
+	  support/regression/tests/gcc-torture-execute-930526-1.c:
+	  Add extern declaration to make test compile where functions aren't inlined.
+
+2017-05-05 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/stm8/gen.c (genMove_o): fixed bug #2607
+
+2017-05-04 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCpeeph.c:
+	  Be more forgiving about omitted whitespace after comma in peephole matching
+	  (whitespace handling had become stricter in the fix to #2600).
+	* src/z80/peep.c:
+	  Slightly more accurate analysis of register reads, also wrt. whitespaces.
+	* src/z80/gen.c:
+	  Unify emitted asm syntax wrt. space after comma.
+
 2017-05-02 Philipp Klaus Krause <pkk AT spth.de>
 
 	* doc/sdccman.lyx:
@@ -37692,4 +37765,4 @@
 	* as/mcs51/lklex.c:  accept everything as symbol name in rel-files, bug fix ID 452601
 	* as/mcs51/lksym.c:  accept everything as symbol name in rel-files, bug fix ID 452601
 
-$Revision: 9897 $
+$Revision: 9913 $

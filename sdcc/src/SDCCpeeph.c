@@ -2026,10 +2026,23 @@ matchLine (char *s, const char *d, hTab ** vars)
           while (ISCHARDIGIT (*d))
             d++;
         }
-      else if (*s && *d)
+      else if (ISCHARSPACE (*s) && ISCHARSPACE (*d)) /* whitespace sequences match any whitespace sequences */
         {
-          /* they should be an exact match otherwise */
-
+          while (ISCHARSPACE (*s))
+            s++;
+          while (ISCHARSPACE (*d))
+            d++;
+        }
+      else if (*s == ',' && *d == ',') /* Allow comman to match comma followed by whitespace */
+        {
+          s++, d++;
+          while (ISCHARSPACE (*s))
+            s++;
+          while (ISCHARSPACE (*d))
+            d++;
+        }
+      else if (*s && *d) /* they should be an exact match otherwise */
+        {
           if (*s++ != *d++)
               return FALSE;
         }
