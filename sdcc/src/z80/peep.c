@@ -376,6 +376,12 @@ static char *special_funcs[][3] = {
   {"call\t____sdcc_2_copy_src_mhl_dst_bcix", "bchl", "debcy"},
   {"call\t____sdcc_4_ldi_nosave_bc", "dehl", "y"},
   {"call\t____sdcc_4_ldi_save_bc", "dehl", "bcy"},
+  {"call\t____sdcc_outi_128", "bchl", "acdey"},
+  {"call\t____sdcc_outi_256", "bchl", "acdey"},
+  {"call\t____sdcc_outi", "bchl", "acdey"},
+  {"call\t____sdcc_ldi_128", "bcdehl", "ay"},
+  {"call\t____sdcc_ldi_256", "bcdehl", "ay"},
+  {"call\t____sdcc_ldi", "bcdehl", "ay"}
 };
 
 static bool
