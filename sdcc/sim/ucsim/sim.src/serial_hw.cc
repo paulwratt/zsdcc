@@ -29,6 +29,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "utils.h"
 #include "globals.h"
@@ -124,11 +125,6 @@ cl_serial_hw::init(void)
       fi->interactive(NULL);
       fi->raw();
       fi->echo(NULL);
-      //deb("** serial io fin %d\n", fi->file_id);
-    }
-  if (fo)
-    {
-      //deb("** serial io fount %d\n", fo->file_id);
     }
 
   menu= 0;
@@ -140,11 +136,14 @@ cl_serial_hw::init(void)
   cl_var *v;
   chars pn(id_string);
   pn.append("%d_", id);
-  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on));
+  uc->vars->add(v= new cl_var(pn+chars("on"), cfg, serconf_on,
+			      "WR: turn on/off, RD: check state"));
   v->init();
-  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often));
+  uc->vars->add(v= new cl_var(pn+chars("check_often"), cfg, serconf_check_often,
+			      "When true, serial IO checked at every instruction"));
   v->init();
-  uc->vars->add(v= new cl_var(pn+chars("esc_char"), cfg, serconf_escape));
+  uc->vars->add(v= new cl_var(pn+chars("esc_char"), cfg, serconf_escape,
+			      "Escape character on serial IO screen"));
   v->init();
 		
   return 0;
@@ -174,6 +173,14 @@ cl_serial_hw::conf_op(cl_memory_cell *cell, t_addr addr, t_mem *val)
 	  cell->set(*val?1:0);
 	}
       break;
+    case serconf_escape:
+      if (val)
+	{
+	  char c= tolower(*val);
+	  if ((c >= 'a') &&
+	      (c <= 'z'))
+	    cell->set(c - 'a'+1);
+	}
     default:
       break;
     }
@@ -219,19 +226,16 @@ cl_serial_hw::proc_input(void)
 	  (fout->file_id == fin->file_id))
 	{
 	  delete fout;
-	  //io->fout= 0;//mk_io("", "");
 	  io->replace_files(false, fin, 0);
 	  fout= 0;
 	}
       delete fin;
-      //io->fin= 0;//mk_io("", "");
       io->replace_files(false, 0, fout);
-      //application->get_commander()->update_active();
       return true;
     }
   if (menu == 0)
     {
-      if (!input_avail || !run)
+      if (fin->tty)
 	{
 	  if (fin->read(&c, 1))
 	    {
@@ -252,11 +256,19 @@ cl_serial_hw::proc_input(void)
 				'a'+esc-1, 'a'+esc-1
 				);
 		}
-	      else if (run)
+	      else if (!input_avail)
 		{
 		  input= c;
 		  input_avail= true;
 		}
+	    }
+	}
+      else if (!input_avail)
+	{
+	  if (fin->read(&c, 1))
+	    {
+	      input= c;
+	      input_avail= true;
 	    }
 	}
     }

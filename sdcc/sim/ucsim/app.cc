@@ -228,9 +228,9 @@ print_help(char *name)
      "                  port=nr   Use localhost:nr as server for serial line\n"
      "  -I options   `options' is a comma separated list of options according to\n"
      "               simulator interface. Known options are:\n"
-     "                 if=memory[address]  turn on interface on given memory location"
-     "                 in=file             specify input file for IO"
-     "                 out=file            specify output file forr IO"
+     "                 if=memory[address]  turn on interface on given memory location\n"
+     "                 in=file             specify input file for IO\n"
+     "                 out=file            specify output file forr IO\n"
      "  -p prompt    Specify string for prompt\n"
      "  -P           Prompt is a null ('\\0') character\n"
      "  -g           Go, start simulation\n"
@@ -498,6 +498,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 		      o->hide();
 		      options->add(o);
 		      free(h);
+		      printf("app creates %s option @%p\n",s,o);
 		    }
 		  options->set_value(s, this, /*(void*)Ser_in*/iname);
 		  free(s);
@@ -513,6 +514,7 @@ cl_app::proc_arguments(int argc, char *argv[])
 		      o->hide();
 		      options->add(o);
 		      free(h);
+		      printf("app creates %s option @%p\n",s,o);
 		    }
 		  options->set_value(s, this, /*(void*)Ser_out*/oname);
 		  free(s);
@@ -642,13 +644,13 @@ cl_app::get_uc(void)
 
 
 /* Command handling */
-
+/*
 class cl_cmd *
 cl_app::get_cmd(class cl_cmdline *cmdline)
 {
   return(0);
 }
-
+*/
 long
 cl_app::eval(chars expr)
 {
@@ -657,6 +659,40 @@ cl_app::eval(chars expr)
   yyparse();
   uc_yy_free_string_to_parse();
   return expr_result;
+}
+
+void
+cl_app::exec(chars line)
+{
+  class cl_console_base *c= commander->frozen_console;
+  if (c == NULL)
+    {
+      c= new cl_console_dummy();
+      c->init();
+    }
+  class cl_cmdline *cmdline= new cl_cmdline(this, (char*)line, c);
+  do
+    {
+      cmdline->init();
+      class cl_cmd *cm= commander->cmdset->get_cmd(cmdline, false/*c->is_interactive()*/);
+      if (cm)
+	{
+	  cm->work(this, cmdline, c);
+	}
+      else if (cmdline->get_name() != 0)
+	{
+	  char *e= cmdline->cmd;
+	  if (strlen(e) > 0)
+	    {
+	      long l= eval(e);
+	      c->dd_printf("%ld\n", l);
+	    }
+	}
+    }
+  while (cmdline->restart_at_rest());
+  delete cmdline;
+  if (c != commander->frozen_console)
+    delete c;
 }
 
 /*
