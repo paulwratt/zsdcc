@@ -135,19 +135,16 @@ struct i_assignment_t
   }
 };
 
-#ifdef HAVE_STX_BTREE_SET_H
-typedef stx::btree_set<var_t> varset_t; // Faster than std::set
-#else
-typedef std::set<var_t> varset_t;
-#endif
-//typedef std::set<var_t, std::less<var_t>, boost::fast_pool_allocator<var_t> > varset_t; // Slower than ordinary std::set
+typedef std::vector<var_t> varset_t;// Faster than std::set,  std::tr1::unordered_set and stx::btree_set.
 
 #ifdef HAVE_STX_BTREE_MAP_H
 typedef stx::btree_map<int, float> icosts_t; // Faster than std::map
 #else
 typedef std::map<int, float> icosts_t;
 #endif
-//typedef std::tr1::unordered_set<var_t> varset_t; // Speed about the same as std::set
+
+typedef std::vector<var_t> cfg_alive_t; // Faster than stx::btree_set in this role.
+typedef std::set<var_t> cfg_dying_t; // Faster than stx::btree_set in this role.
 
 struct assignment
 {
@@ -207,8 +204,8 @@ struct cfg_node
 {
   iCode *ic;
   operand_map_t operands;
-  std::set<var_t> alive;
-  std::set<var_t> dying;
+  cfg_alive_t alive;
+  cfg_dying_t dying;
 
 #ifdef DEBUG_SEGV
   cfg_node(void);
@@ -320,6 +317,8 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
         extra_ic_generated(ic);
 
         cfg[i].ic = ic;
+        ic->rSurv = newBitVect(port->num_regs); // Never freed. Memory leak?
+        ic->rMask = newBitVect(port->num_regs); // Never freed. Memory leak?
 
         if (ic->generated)
           continue;
@@ -401,7 +400,7 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
                   wassert (key_to_index.find(ic->key) != key_to_index.end());
                   wassert (sym_to_index.find(std::pair<int, int>(i, k)) != sym_to_index.end());
                   wassertl (key_to_index[ic->key] < boost::num_vertices(cfg), "Node not in CFG.");
-                  cfg[key_to_index[ic->key]].alive.insert(sym_to_index[std::pair<int, int>(i, k)]);
+                  cfg[key_to_index[ic->key]].alive.push_back(sym_to_index[std::pair<int, int>(i, k)]);
                 }
 
               // TODO: Move this to a place where it also works when using the old allocator!
@@ -455,7 +454,7 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
       boost::copy_graph(cfg, cfg2, boost::vertex_copy(forget_properties()).edge_copy(forget_properties())); // This call to copy_graph is expensive!
       for (int j = boost::num_vertices(cfg) - 1; j >= 0; j--)
         {
-          if (cfg[j].alive.find(i) == cfg[j].alive.end())
+          if (std::find(cfg[j].alive.begin(), cfg[j].alive.end(), i) == cfg[j].alive.end())
             {
               boost::clear_vertex(j, cfg2);
               boost::remove_vertex(j, cfg2);
@@ -474,26 +473,28 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
 
           for (boost::graph_traits<cfg_t>::vertices_size_type j = 0; j < boost::num_vertices(cfg) - 1; j++)
             {
-              if(cfg[j].alive.find(i) != cfg[j].alive.end())
+              if(std::binary_search(cfg[j].alive.begin(), cfg[j].alive.end(), i))
                 {
                   for (boost::graph_traits<cfg_t>::vertices_size_type k = 0; k < boost::num_vertices(cfg) - 1; k++)
                     {
                       if (component[j] == component[k])
-                        cfg[k].alive.insert(i);
+                        cfg[k].alive.push_back(i);
                     }
                 }
             }
         }
     }
 
+  // Sort alive and setup dying.
   for (boost::graph_traits<cfg_t>::vertices_size_type i = 0; i < num_vertices(cfg); i++)
     {
-      cfg[i].dying = cfg[i].alive;
+      std::sort(cfg[i].alive.begin(), cfg[i].alive.end());
+      cfg[i].dying = cfg_dying_t(cfg[i].alive.begin(), cfg[i].alive.end());;
       typedef boost::graph_traits<cfg_t>::adjacency_iterator adjacency_iter_t;
       adjacency_iter_t j, j_end;
       for (boost::tie(j, j_end) = adjacent_vertices(i, cfg); j != j_end; ++j)
         {
-          std::set<var_t>::const_iterator v, v_end;
+          cfg_alive_t::const_iterator v, v_end;
           for (v = cfg[*j].alive.begin(), v_end = cfg[*j].alive.end(); v != v_end; ++v)
             {
               const symbol *const vsym = (symbol *)(hTabItemWithKey(liveRanges, con[*v].v));
@@ -516,12 +517,12 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
   // Construct conflict graph
   for (boost::graph_traits<cfg_t>::vertices_size_type i = 0; i < num_vertices(cfg); i++)
     {
-      std::set<var_t>::const_iterator v, v_end;
+      cfg_alive_t::const_iterator v, v_end;
       const iCode *ic = cfg[i].ic;
       
       for (v = cfg[i].alive.begin(), v_end = cfg[i].alive.end(); v != v_end; ++v)
         {
-          std::set<var_t>::const_iterator v2, v2_end;
+          cfg_alive_t::const_iterator v2, v2_end;
           
           // Conflict between operands are handled by add_operand_conflicts_in_node().
           if (cfg[i].dying.find (*v) != cfg[i].dying.end())
@@ -599,13 +600,14 @@ void assignments_introduce_instruction(assignment_list_t &alist, unsigned short 
 
   for (ai = alist.begin(), ai_end = alist.end(); ai != ai_end; ++ai)
     {
-      std::set<var_t> i_variables;
+      varset_t i_variables;
 
       std::set_intersection(ai->local.begin(), ai->local.end(), G[i].alive.begin(), G[i].alive.end(), std::inserter(i_variables, i_variables.end()));
 
       i_assignment_t ia;
 
-      std::set<var_t>::const_iterator v, v_end;
+      varset_t::const_iterator v, v_end;
+
       for (v = i_variables.begin(), v_end = i_variables.end(); v != v_end; ++v)
         if (ai->global[*v] >= 0)
           ia.add_var(*v, ai->global[*v]);
@@ -635,7 +637,9 @@ static void assignments_introduce_variable(assignment_list_t &alist, unsigned sh
                   a = *ai;
                   ai->marked = true;
                   a.marked = false;
-                  a.local.insert(v);
+                  varset_t::iterator i = std::lower_bound(a.local.begin(), a.local.end(), v);
+                  if (i == a.local.end() || *i != v)
+                    a.local.insert(i, v);
                 }
               a.global[v] = r;
               a.i_assignment.add_var(v, r);
@@ -857,8 +861,9 @@ static void tree_dec_ralloc_forget(T_t &T, typename boost::graph_traits<T_t>::ve
     {
       // Erasing by iterators doesn't work with B-Trees, and erasing by value invalidates iterators.
       std::set<var_t>::const_iterator oi, oi_end;
-      for (oi = old_vars.begin(), oi_end = old_vars.end(); oi != oi_end; ++oi)
-        ai->local.erase(*oi);
+      varset_t newlocal;
+      std::set_difference(ai->local.begin(), ai->local.end(), old_vars.begin(), old_vars.end(), std::inserter(newlocal, newlocal.end()));
+      ai->local = newlocal;
 
       ai->i_costs.erase(i);
     }
@@ -1145,7 +1150,7 @@ static void dump_cfg(const cfg_t &cfg)
     {
       std::ostringstream os;
       os << i << ", " << cfg[i].ic->key << ": ";
-      std::set<var_t>::const_iterator v;
+      cfg_alive_t::const_iterator v;
       for (v = cfg[i].alive.begin(); v != cfg[i].alive.end(); ++v)
         os << *v << " ";
       name[i] = os.str();

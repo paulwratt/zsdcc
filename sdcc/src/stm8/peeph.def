@@ -9,10 +9,40 @@ replace restart {
 } if notVolatile(%1), notVolatile(%2), notUsed(%1), notUsed('n'), notUsed('z')
 
 replace restart {
+	clr	%1
+} by {
+	; peephole 0a removed dead clear of %1.
+} if notVolatile(%1), notUsed(%1), notUsed('n'), notUsed('z')
+
+replace restart {
+	and	a, %1
+} by {
+	; peephole 0c removed dead and.
+} if notVolatile(%1), notUsed('a'), notUsed('n'), notUsed('z')
+
+replace restart {
+	or	a, %1
+} by {
+	; peephole 0d removed dead or.
+} if notVolatile(%1), notUsed('a'), notUsed('n'), notUsed('z')
+
+replace restart {
+	xor	a, %1
+} by {
+	; peephole 0e removed dead xor.
+} if notVolatile(%1), notUsed('a'), notUsed('n'), notUsed('z')
+
+replace restart {
 	ldw	%1, %2
 } by {
 	; peephole 0w removed dead load into %1 from %2.
 } if notVolatile(%1), notVolatile(%2), notUsed(%1), notUsed('n'), notUsed('z')
+
+replace restart {
+	clrw	%1
+} by {
+	; peephole 0x removed dead clrw of %1.
+} if notVolatile(%1), notUsed(%1), notUsed('n'), notUsed('z')
 
 replace restart {
 	ld	%1, %2
@@ -97,6 +127,16 @@ replace restart {
 } if notUsed(%1)
 
 replace restart {
+	ldw	(%1, sp), x
+	ldw	x, (%2, sp)
+	addw	x, (%1, sp)
+} by {
+	ldw	(%1, sp), x
+	; peephole 3e eliminated load using commutativity of addition
+	addw	x, (%2, sp)
+}
+
+replace restart {
 	ld	a, (%1, y)
 	push	a
 	ld	a, (%2, x)
@@ -170,14 +210,6 @@ replace restart {
 	%2	%1
 	; peephole 7 applied %2 on %1 instead of a.
 } if notUsed('a'), notSame(%2 'push' 'pop'), notSame(%1 'xl' 'xh' 'yl' 'yh')
-
-replace restart {
-	ld	a, %1
-	tst	a
-} by {
-	tst	%1
-	; peephole 8 tested in %1 instead of a.
-} if notUsed('a'), notSame(%1 'xl' 'xh' 'yl' 'yh')
 
 replace restart {
 	ld	a, (x)
@@ -259,6 +291,54 @@ replace restart {
 }
 
 replace restart {
+	or	a, %1
+	tnz	a
+} by {
+	or	a, %1
+	; peephole 12-9a removed redundant tnz.
+}
+
+replace restart {
+	xor	a, %1
+	tnz	a
+} by {
+	xor	a, %1
+	; peephole 12-9b removed redundant tnz.
+}
+
+replace restart {
+	add	a, %1
+	tnz	a
+} by {
+	add	a, %1
+	; peephole 12-9c removed redundant tnz.
+}
+
+replace restart {
+	adc	a, %1
+	tnz	a
+} by {
+	adc	a, %1
+	; peephole 12-9d removed redundant tnz.
+}
+
+replace restart {
+	sub	a, %1
+	tnz	a
+} by {
+	sub	a, %1
+	; peephole 12-9e removed redundant tnz.
+}
+
+replace restart {
+	sbc	a, %1
+	tnz	a
+} by {
+	sbc	a, %1
+	; peephole 12-9f removed redundant tnz.
+}
+
+replace restart {
 	ld	a, (%1)
 	tnz	a
 } by {
@@ -272,6 +352,30 @@ replace restart {
 } by {
 	ld	a, (%1, %2)
 	; peephole 12-11 removed redundant tnz.
+}
+
+replace restart {
+	rlc	a
+	tnz	a
+} by {
+	rlc	a
+	; peephole 12-12 removed redundant tnz.
+}
+
+replace restart {
+	ld	x, (%1, %2)
+	tnz	x
+} by {
+	ld	x, (%1, %2)
+	; peephole 12-13 removed redundant tnzw.
+}
+
+replace restart {
+	ld	y, (%1, %2)
+	tnz	y
+} by {
+	ld	y, (%1, %2)
+	; peephole 12-14 removed redundant tnzw.
 }
 
 replace restart {

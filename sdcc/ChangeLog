@@ -1,4 +1,156 @@
-2017-05-15 Philipp Klaus Krause <pkk AT spth.de>
+2017-07-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve writing of constants to bit-fields.
+
+2017-07-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/ralloc.c,
+	  src/stm8/gen.c:
+	  Better code for operations on 8-bit global variables.
+
+2017-07-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve code generation for wide read through pointer.
+
+2017-07-16 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Implement narrowing of loop counters, RFE #530.
+	* src/stm8/gen.c,
+	  support/regression/tests/bug-2630.c:
+	  Fix bug #2630.
+
+2017-07-16 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c (isInitiallyTrue),
+	* src/SDCCerr.c (setWarningDisabledState),
+	* src/SDCCerr.h: fix bugs #2552 & #2614
+	* src/SDCCast.c (decorateType): fix bug #2550
+
+2017-07-15 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c:
+	  Improve narrowing of multiplications.
+
+2017-07-15 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/mcs51/gen.c (genRet): fix some problems with returning long long
+	* src/SDCCicode.c (geniCodeAdd): fix bug #2625
+	* support/regression/tests/bug-2625.c: test for bug #2625
+
+2017-07-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Optimze reads from literal pointer.
+	* src/SDCCopt.c:
+	  Optimize right shift followed by cast.
+
+2017-07-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  support/regression/tests/bug-2628.c:
+	  Fix bug #2628.
+
+2017-07-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/peeph.def,
+	  src/stm8/peep.c:
+	  Improve accuracy and fix bugs in peephole optimizer.
+
+2017-07-05 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  src/SDCCsymt.c:
+	  Minor code cleanup, gets rid of a few LLVM warnings.
+
+2017-07-03 Philipp Klaus Krause <pkk AT spth.de>
+
+	* sdas/asstm8/stm8pst.c:
+	  Support for break debug instruction, patch by Reto Schneider.
+
+2016-12-12 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/SDCCast.c:
+	  add cast to left and right subtree only if they both can be casted.
+	* support/regression/tests/bug-2611.c:
+	  add a new test case.
+
+2017-06-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCgen.c,
+	  support/regression/tests/bug-2627.c:
+	  Fix bug #2627.
+	* src/stm8/gen.c:
+	  Enable use of execution count in stm8 register allocation cost calculations.
+
+2017-06-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCicode.h,
+	  src/SDCCopt.c:
+	  Execution frequency handling infrastructure.
+
+2017-06-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp,
+	  .version,
+	  src/*/ralloc2.cc:
+	  Speed up register allocator.
+
+2017-06-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp,
+	  src/SDCCbitv.h,
+	  src/SDCCbitv.c,
+	  src/*/ralloc2.cc:
+	  Speed up register allocator a bit.
+
+2017-06-24 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  More efficient >= 32-bit increment for (partially) spilt local variables.
+
+2017-06-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Improve 16-bit register-to-register transfer,
+	  consider cycle cost for register allocation.
+	* src/stm8/peeph.def:
+	  Improve 16-bit addition with on-stack operand.
+
+2017-06-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c,
+	  src/stm8/peeph.def:
+	  More efficient comparisons.
+
+2017-06-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2621.c:
+	  Disable test for ds390, which doesn't have long long.
+
+2017-06-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/stm8.c:
+	  More efficient equality comparisons.
+	* support/regression/tests/bug-2621.c:
+	  Test for bug #2612.
+
+2017-06-12 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/stm8.c:
+	  More efficient equality comparisons, fix bug #2612.
+
+2017-05-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/non-free/lib/pic14/Makefile.in,
+	  device/non-free/lib/pic14/Makefile.subdir,
+	  src/Makefile.in,
+	  src/port.mk:
+	  Sort directory listings towards are reproducible build, patch by Bernhard M. Wiedemann.
+
+2017-05-30 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/SDCC.lex,
 	  src/SDCCmain.c,

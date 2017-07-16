@@ -28,7 +28,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 02111-1307, USA. */
 /*@1@*/
 
-/* $Id: stm8.cc 678 2017-03-07 11:33:52Z drdani $ */
+/* $Id: stm8.cc 765 2017-07-01 10:43:56Z drdani $ */
 
 #include "ddconfig.h"
 
@@ -58,6 +58,7 @@ Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #include "clkcl.h"
 #include "uidcl.h"
 #include "bl.h"
+#include "flashcl.h"
 
 /*******************************************************************/
 
@@ -196,50 +197,74 @@ cl_stm8::mk_hw_elements(void)
   cl_uc::mk_hw_elements();
   class cl_option *o;
 
-  o= new cl_string_option(this, "serial1_in_file",
-			  "Input file for serial line uart1 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-  o= new cl_string_option(this, "serial1_out_file",
-			  "Output file for serial line uart1 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-
-  o= new cl_string_option(this, "serial2_in_file",
-			  "Input file for serial line uart2 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-  o= new cl_string_option(this, "serial2_out_file",
-			  "Output file for serial line uart2 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
+  if ((o= application->options->get_option("serial1_in_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial1_in_file",
+			      "Input file for serial line uart1 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  if ((o= application->options->get_option("serial1_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial1_out_file",
+			      "Output file for serial line uart1 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
   
-  o= new cl_string_option(this, "serial3_in_file",
-			  "Input file for serial line uart3 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-  o= new cl_string_option(this, "serial3_out_file",
-			  "Output file for serial line uart3 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
+  if ((o= application->options->get_option("serial2_in_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial2_in_file",
+			      "Input file for serial line uart2 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  if ((o= application->options->get_option("serial2_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial2_out_file",
+			      "Output file for serial line uart2 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
   
-  o= new cl_string_option(this, "serial4_in_file",
-			  "Input file for serial line uart4 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-  o= new cl_string_option(this, "serial4_out_file",
-			  "Output file for serial line uart4 (-S)");
-  application->options->new_option(o);
-  o->init();
-  o->hide();
-
+  if ((o= application->options->get_option("serial3_in_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial3_in_file",
+			      "Input file for serial line uart3 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  if ((o= application->options->get_option("serial3_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial3_out_file",
+			      "Output file for serial line uart3 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  
+  if ((o= application->options->get_option("serial4_in_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial4_in_file",
+			      "Input file for serial line uart4 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  if ((o= application->options->get_option("serial4_out_file")) == NULL)
+    {
+      o= new cl_string_option(this, "serial4_out_file",
+			      "Output file for serial line uart4 (-S)");
+      application->options->new_option(o);
+      o->init();
+      o->hide();
+    }
+  
   add_hw(d= new cl_port_ui(this, 0, "dport"));
   d->init();
   pd.init();
@@ -472,7 +497,19 @@ cl_stm8::mk_hw_elements(void)
       add_hw(h= new cl_uid(this, 0x4925));
       h->init();
     }
-  
+
+  // FLASH
+  if (type->subtype & (DEV_STM8SAF))
+    {
+      add_hw(h= new cl_saf_flash(this, 0x505a));
+      h->init();
+    }
+  else if (type->subtype & (DEV_STM8ALL |
+			    DEV_STM8L101))
+    {
+      add_hw(h= new cl_l_flash(this, 0x5050));
+      h->init();
+    }
   //add_hw(h= new cl_tim235(this, 3, 0x5320));
   //h->init();
   //add_hw(h= new cl_tim46(this, 4, 0x5340));
@@ -589,16 +626,16 @@ cl_stm8::make_memories(void)
   address_spaces->add(regs16);
 
   class cl_var *v;
-  vars->add(v= new cl_var(cchars("A"), regs8, 0));
+  vars->add(v= new cl_var(cchars("A"), regs8, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("CC"), regs8, 1));
+  vars->add(v= new cl_var(cchars("CC"), regs8, 1, ""));
   v->init();
   
-  vars->add(v= new cl_var(cchars("X"), regs16, 0));
+  vars->add(v= new cl_var(cchars("X"), regs16, 0, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("Y"), regs16, 1));
+  vars->add(v= new cl_var(cchars("Y"), regs16, 1, ""));
   v->init();
-  vars->add(v= new cl_var(cchars("SP"), regs16, 2));
+  vars->add(v= new cl_var(cchars("SP"), regs16, 2, ""));
   v->init();
 }
 
@@ -861,10 +898,19 @@ cl_stm8::disass(t_addr addr, const char *sep)
               ++immed_offset;
               break;
             case 'p': // b    byte index offset
-              sprintf(temp, "0x%04lx",
-		      (long int)(addr+immed_offset+1
-				 +(int)rom->get(addr+immed_offset)));
-              ++immed_offset;
+	      {
+		long int base;
+		i8_t offs;
+		base= addr+immed_offset+1;
+		offs= rom->get(addr+immed_offset);
+		long int res= base+offs;
+		sprintf(temp, "0x%04lx",
+			/*(long int)(addr+immed_offset+1
+			  +(int)rom->get(addr+immed_offset))*/
+			res
+			);
+		++immed_offset;
+	      }
               break;
             default:
               strcpy(temp, "?");
@@ -1199,31 +1245,11 @@ cl_stm8::exec_inst(void)
                return( inst_cpl( code, cprefix));
                break;
             case 0x80: // TRAP
-               // store to stack
-               //PC++;
-	       /*
-               push2( PC & 0xffff);
-               push1( PC >> 16); //extended PC
-               push2( regs.Y);
-               push2( regs.X);
-               push1( regs.A);
-               push1( regs.CC);
-               // set I1 and I0 status bits
-               FLAG_SET(BIT_I1);
-               FLAG_SET(BIT_I0);
-               // get TRAP address
-               PC = get1(0x8004);
-               if (PC == 0x82) { // this is reserved opcode for vector table
-		 //regs.VECTOR = 0;
-                  PC = get1(0x8005) << 16;
-                  PC |= get2(0x8006);
-                  return(resGO);
-		  }*/
 	       {
 		 class it_level *il= new it_level(3, 0x8004, PC, trap_src);
 		 accept_it(il);
 	       }
-               return(resHALT);
+               return(/*resHALT*/resGO);
             case 0x90:
                if(cprefix==0x90) {
                   regs.Y = regs.X;
