@@ -116,7 +116,7 @@ bool uselessDecl = TRUE;
 %type <sym> declaration_list identifier_list
 %type <sym> declarator2_function_attributes while do for critical
 %type <sym> addressmod
-%type <lnk> pointer type_specifier_list type_specifier_list_ type_specifier type_name
+%type <lnk> pointer type_specifier_list type_specifier_list_ type_specifier type_qualifier_list type_qualifier type_name
 %type <lnk> storage_class_specifier struct_or_union_specifier function_specifier alignment_specifier
 %type <lnk> declaration_specifiers declaration_specifiers_ sfr_reg_bit sfr_attributes
 %type <lnk> function_attribute function_attributes enum_specifier
@@ -801,8 +801,60 @@ Interrupt_storage
         }
    ;
 
+type_qualifier
+   : SD_CONST  {
+                  $$=newLink(SPECIFIER);
+                  SPEC_CONST($$) = 1;
+               }
+   | RESTRICT  {
+                  $$=newLink(SPECIFIER);
+                  SPEC_RESTRICT($$) = 1;
+               }
+   | VOLATILE  {
+                  $$=newLink(SPECIFIER);
+                  SPEC_VOLATILE($$) = 1;
+               }
+   | ADDRSPACE_NAME {
+                  $$=newLink(SPECIFIER);
+                  SPEC_ADDRSPACE($$) = findSym (AddrspaceTab, 0, $1);
+               }
+   | XDATA     {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_XDATA;
+               }
+   | CODE      {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_CODE;
+               }
+   | EEPROM    {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_EEPROM;
+               }
+   | DATA      {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_DATA;
+               }
+   | IDATA     {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_IDATA;
+               }
+   | PDATA     {
+                  $$ = newLink (SPECIFIER);
+                  SPEC_SCLS($$) = S_PDATA;
+               }
+   ;
+
+type_qualifier_list
+  : type_qualifier
+  | type_qualifier_list type_qualifier
+               {
+                 $$ = mergeDeclSpec($1, $2, "type_qualifier_list type_qualifier skipped");
+               }
+  ;
+
 type_specifier
-   : SD_BOOL   {
+   : type_qualifier { $$ = $1; }
+   | SD_BOOL   {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_BOOL;
                   ignoreTypedefType = 1;
@@ -842,22 +894,6 @@ type_specifier
                   SPEC_NOUN($$) = V_VOID;
                   ignoreTypedefType = 1;
                }
-   | SD_CONST  {
-                  $$=newLink(SPECIFIER);
-                  SPEC_CONST($$) = 1;
-               }
-   | VOLATILE  {
-                  $$=newLink(SPECIFIER);
-                  SPEC_VOLATILE($$) = 1;
-               }
-   | RESTRICT  {
-                  $$=newLink(SPECIFIER);
-                  SPEC_RESTRICT($$) = 1;
-               }
-   | ADDRSPACE_NAME {
-                  $$=newLink(SPECIFIER);
-                  SPEC_ADDRSPACE($$) = findSym (AddrspaceTab, 0, $1);
-               }
    | SD_FLOAT  {
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_FLOAT;
@@ -867,30 +903,6 @@ type_specifier
                   $$=newLink(SPECIFIER);
                   SPEC_NOUN($$) = V_FIXED16X16;
                   ignoreTypedefType = 1;
-               }
-   | XDATA     {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_XDATA;
-               }
-   | CODE      {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_CODE;
-               }
-   | EEPROM    {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_EEPROM;
-               }
-   | DATA      {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_DATA;
-               }
-   | IDATA     {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_IDATA;
-               }
-   | PDATA     {
-                  $$ = newLink (SPECIFIER);
-                  SPEC_SCLS($$) = S_PDATA;
                }
    | BIT       {
                   $$=newLink(SPECIFIER);
@@ -1403,6 +1415,25 @@ declarator2
             DCL_ELEM(p) = 0;
             addDecl($1,0,p);
          }
+   | declarator3 '[' type_qualifier_list ']'
+         {
+            sym_link *p, *n;
+
+            if (!options.std_c99)
+              werror (E_QUALIFIED_ARRAY_PARAM_C99);
+
+            p = newLink (DECLARATOR);
+            DCL_TYPE(p) = ARRAY;
+            DCL_ELEM(p) = 0;
+            DCL_PTR_CONST(p) = SPEC_CONST ($3);
+            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+            addDecl($1,0,p);
+            n = newLink (SPECIFIER);
+            SPEC_NEEDSPAR(n) = 1;
+            addDecl($1,0,n);
+         }
    | declarator3 '[' constant_expr ']'
          {
             sym_link *p;
@@ -1431,6 +1462,164 @@ declarator2
               }
             DCL_ELEM(p) = size;
             addDecl($1, 0, p);
+         }
+  | declarator3 '[' STATIC constant_expr ']'
+         {
+            sym_link *p, *n;
+            value *tval;
+            int size;
+
+            if (!options.std_c99)
+              werror (E_STATIC_ARRAY_PARAM_C99);
+
+            tval = constExprValue($4, TRUE);
+            /* if it is not a constant then Error  */
+            p = newLink (DECLARATOR);
+            DCL_TYPE(p) = ARRAY;
+
+            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+              {
+                werror(E_CONST_EXPECTED);
+                /* Assume a single item array to limit the cascade */
+                /* of additional errors. */
+                size = 1;
+              }
+            else
+              {
+                if ((size = (int) ulFromVal(tval)) < 0)
+                  {
+                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+                    size = 1;
+                  }
+              }
+            DCL_ELEM(p) = size;
+            addDecl($1, 0, p);
+            n = newLink (SPECIFIER);
+            SPEC_NEEDSPAR(n) = 1;
+            addDecl($1,0,n);
+         }
+  | declarator3 '[' type_qualifier_list constant_expr ']'
+         {
+            sym_link *p, *n;
+            value *tval;
+            int size;
+
+            if (!options.std_c99)
+              werror (E_QUALIFIED_ARRAY_PARAM_C99);
+
+            tval = constExprValue($4, TRUE);
+            /* if it is not a constant then Error  */
+            p = newLink (DECLARATOR);
+            DCL_TYPE(p) = ARRAY;
+
+            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+              {
+                werror(E_CONST_EXPECTED);
+                /* Assume a single item array to limit the cascade */
+                /* of additional errors. */
+                size = 1;
+              }
+            else
+              {
+                if ((size = (int) ulFromVal(tval)) < 0)
+                  {
+                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+                    size = 1;
+                  }
+              }
+            DCL_ELEM(p) = size;
+            DCL_PTR_CONST(p) = SPEC_CONST ($3);
+            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+            addDecl($1, 0, p);
+            n = newLink (SPECIFIER);
+            SPEC_NEEDSPAR(n) = 1;
+            addDecl($1,0,n);
+         }
+| declarator3 '[' STATIC type_qualifier_list constant_expr ']'
+         {
+            sym_link *p, *n;
+            value *tval;
+            int size;
+
+            if (!options.std_c99)
+              {
+                werror (E_STATIC_ARRAY_PARAM_C99);
+                werror (E_QUALIFIED_ARRAY_PARAM_C99);
+              }
+
+            tval = constExprValue($5, TRUE);
+            /* if it is not a constant then Error  */
+            p = newLink (DECLARATOR);
+            DCL_TYPE(p) = ARRAY;
+
+            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+              {
+                werror(E_CONST_EXPECTED);
+                /* Assume a single item array to limit the cascade */
+                /* of additional errors. */
+                size = 1;
+              }
+            else
+              {
+                if ((size = (int) ulFromVal(tval)) < 0)
+                  {
+                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+                    size = 1;
+                  }
+              }
+            DCL_ELEM(p) = size;
+            DCL_PTR_CONST(p) = SPEC_CONST ($4);
+            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($4);
+            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($4);
+            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($4);
+            addDecl($1, 0, p);
+            n = newLink (SPECIFIER);
+            SPEC_NEEDSPAR(n) = 1;
+            addDecl($1,0,n);
+         }
+| declarator3 '[' type_qualifier_list STATIC constant_expr ']'
+         {
+            sym_link *p, *n;
+            value *tval;
+            int size;
+
+            if (!options.std_c99)
+              {
+                werror (E_QUALIFIED_ARRAY_PARAM_C99);
+                werror (E_STATIC_ARRAY_PARAM_C99);
+              }
+
+            tval = constExprValue($5, TRUE);
+            /* if it is not a constant then Error  */
+            p = newLink (DECLARATOR);
+            DCL_TYPE(p) = ARRAY;
+
+            if (!tval || (SPEC_SCLS(tval->etype) != S_LITERAL))
+              {
+                werror(E_CONST_EXPECTED);
+                /* Assume a single item array to limit the cascade */
+                /* of additional errors. */
+                size = 1;
+              }
+            else
+              {
+                if ((size = (int) ulFromVal(tval)) < 0)
+                  {
+                    werror(E_NEGATIVE_ARRAY_SIZE, $1->name);
+                    size = 1;
+                  }
+              }
+            DCL_ELEM(p) = size;
+            DCL_PTR_CONST(p) = SPEC_CONST ($3);
+            DCL_PTR_RESTRICT(p) = SPEC_RESTRICT ($3);
+            DCL_PTR_VOLATILE(p) = SPEC_VOLATILE ($3);
+            DCL_PTR_ADDRSPACE(p) = SPEC_ADDRSPACE ($3);
+            addDecl($1, 0, p);
+            n = newLink (SPECIFIER);
+            SPEC_NEEDSPAR(n) = 1;
+            addDecl($1,0,n);
          }
    ;
 
@@ -1595,6 +1784,8 @@ parameter_declaration
               werror (E_STORAGE_CLASS_FOR_PARAMETER, $2->name);
             }
           pointerTypes ($2->type, $1);
+          if (IS_SPEC ($2->etype))
+            SPEC_NEEDSPAR($2->etype) = 0;
           addDecl ($2, 0, $1);
           for (loop = $2; loop; loop->_isparm = 1, loop = loop->next)
             ;
