@@ -451,7 +451,7 @@ struct
   { W_DEPRECATED_KEYWORD, ERROR_LEVEL_WARNING,
      "keyword '%s' is deprecated, use '%s' instead", 0 },
   { E_STORAGE_CLASS_FOR_PARAMETER, ERROR_LEVEL_ERROR,
-     "storage class specified for parameter '%s'", 0 },
+     "storage class other than register specified for parameter '%s'", 0 },
   { E_OFFSETOF_TYPE, ERROR_LEVEL_ERROR,
      "offsetof can only be applied to structs/unions", 0 },
   { E_INCOMPLETE_FIELD, ERROR_LEVEL_ERROR,
@@ -535,6 +535,12 @@ struct
     "inline function '%s' might lose function attributes", 0},
   { E_FOR_INITAL_DECLARATION_C99, ERROR_LEVEL_ERROR,
     "initial declaration in for loop requires ISO C99 or later", 0},
+  { E_QUALIFIED_ARRAY_PARAM_C99, ERROR_LEVEL_ERROR,
+    "qualifiers in array parameters require ISO C99 or later", 0},
+  { E_QUALIFIED_ARRAY_NOPARAM, ERROR_LEVEL_ERROR,
+    "qualifier or static in array declarator that is not a parameter", 0},
+  { E_STATIC_ARRAY_PARAM_C99, ERROR_LEVEL_ERROR,
+    "static in array parameters requires ISO C99 or later", 0},
 };
 
 /* -------------------------------------------------------------------------------
