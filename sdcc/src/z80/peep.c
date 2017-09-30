@@ -381,7 +381,24 @@ static char *special_funcs[][3] = {
   {"call\t____sdcc_outi", "bchl", "acdey"},
   {"call\t____sdcc_ldi_128", "bcdehl", "ay"},
   {"call\t____sdcc_ldi_256", "bcdehl", "ay"},
-  {"call\t____sdcc_ldi", "bcdehl", "ay"}
+  {"call\t____sdcc_ldi", "bcdehl", "ay"},
+  {"call\t____sdcc_4_copy_srcd_hlix_dst_deix","dehl","y"},
+  {"call\t____sdcc_4_and_src_mbc_mhl_dst_deix","bcdehl","y"},
+  {"call\t____sdcc_4_or_src_mbc_mhl_dst_deix","bcdehl","y"},
+  {"call\t____sdcc_4_xor_src_mbc_mhl_dst_deix","bcdehl","y"},
+  {"call\t____sdcc_4_or_src_dehl_dst_bcix","bcdehl","dehly"},
+  {"call\t____sdcc_4_xor_src_dehl_dst_bcix","bcdehl","dehly"},
+  {"call\t____sdcc_4_and_src_dehl_dst_bcix","bcdehl","dehly"},
+  {"call\t____sdcc_4_xor_src_mbc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_or_src_mbc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_and_src_mbc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_cpl_src_mhl_dst_debc","hl","y"},
+  {"call\t____sdcc_4_xor_src_debc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_or_src_debc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_and_src_debc_mhl_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_and_src_debc_hlix_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_or_src_debc_hlix_dst_debc","bcdehl","y"},
+  {"call\t____sdcc_4_xor_src_debc_hlix_dst_debc","bcdehl","y"},
 };
 
 static bool
