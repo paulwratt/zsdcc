@@ -60,16 +60,11 @@
 #include <boost/graph/graphviz.hpp>
 #include <boost/graph/adjacency_matrix.hpp>
 #include <boost/graph/connected_components.hpp>
+#include <boost/container/flat_set.hpp>
+#include <boost/container/flat_map.hpp>
 
 #include "common.h"
 #include "SDCCtree_dec.hpp"
-
-#ifdef HAVE_STX_BTREE_SET_H
-#include <stx/btree_set.h>
-#endif
-#ifdef HAVE_STX_BTREE_MAP_H
-#include <stx/btree_map.h>
-#endif
 
 extern "C"
 {
@@ -135,16 +130,12 @@ struct i_assignment_t
   }
 };
 
-typedef std::vector<var_t> varset_t;// Faster than std::set,  std::tr1::unordered_set and stx::btree_set.
+typedef std::vector<var_t> varset_t; // Faster than std::set,  std::tr1::unordered_set and stx::btree_set here.
 
-#ifdef HAVE_STX_BTREE_MAP_H
-typedef stx::btree_map<int, float> icosts_t; // Faster than std::map
-#else
-typedef std::map<int, float> icosts_t;
-#endif
+typedef boost::container::flat_map<int, float> icosts_t; // Faster than std::map and stx::btree_map here.
 
-typedef std::vector<var_t> cfg_alive_t; // Faster than stx::btree_set in this role.
-typedef std::set<var_t> cfg_dying_t; // Faster than stx::btree_set in this role.
+typedef std::vector<var_t> cfg_alive_t; // Faster than stx::btree_set here .
+typedef boost::container::flat_set<var_t> cfg_dying_t; // Faster than stx::btree_set and std::set here.
 
 struct assignment
 {
@@ -197,8 +188,7 @@ struct tree_dec_node
   unsigned weight; // The weight is the number of nodes at which intermediate results need to be remembered. In general, to minimize memory consumption, at join nodes the child with maximum weight should be processed first.
 };
 
-typedef std::multimap<int, var_t> operand_map_t;
-//typedef stx::btree_multimap<int, var_t> operand_map_t; // Slightly slower than std::multimap.
+typedef boost::container::flat_multimap<int, var_t> operand_map_t; // Faster than std::multimap<int, var_t> and stx::btree_multimap<int, var_t> here.
 
 struct cfg_node
 {
@@ -266,7 +256,7 @@ add_operand_to_cfg_node(cfg_node &n, operand *o, std::map<std::pair<int, reg_t>,
     {
       if (n.operands.find(OP_SYMBOL_CONST(o)->key) == n.operands.end())
         for (k = 0; k < OP_SYMBOL_CONST(o)->nRegs; k++)
-          n.operands.insert(std::pair<const int, var_t>(OP_SYMBOL_CONST(o)->key, sym_to_index[std::pair<int, reg_t>(OP_SYMBOL_CONST(o)->key, k)]));
+          n.operands.insert(std::pair<int, var_t>(OP_SYMBOL_CONST(o)->key, sym_to_index[std::pair<int, reg_t>(OP_SYMBOL_CONST(o)->key, k)]));
     }
 }
 
@@ -404,10 +394,10 @@ create_cfg(cfg_t &cfg, con_t &con, ebbIndex *ebbi)
                 }
 
               // TODO: Move this to a place where it also works when using the old allocator!
-              if(isym->block)
-                isym->block = btree_lowest_common_ancestor(isym->block, ic->block);
-              else
-                isym->block = ic->block;
+              isym->block = btree_lowest_common_ancestor(isym->block, ic->block);
+              // If this symbol has a spill location, ensure the spill location is also allocated in a compatible block
+              if (SYM_SPIL_LOC(isym))
+                SYM_SPIL_LOC(isym)->block = btree_lowest_common_ancestor(SYM_SPIL_LOC(isym)->block, isym->block);
             }
         }
 
@@ -598,6 +588,44 @@ void assignments_introduce_instruction(assignment_list_t &alist, unsigned short 
 {
   assignment_list_t::iterator ai, ai_end;
 
+#if 1 // Efficient code - reduces total SDCC runtime by about 5.5% vs. code below
+  struct inserter_t
+    {
+      explicit inserter_t(const std::vector<reg_t>& g, i_assignment_t& a) : global(g), ia(a)
+        {
+	}	
+      inserter_t& operator=(var_t v)
+        {
+          if (global[v] >= 0)
+            ia.add_var(v, global[v]);
+        }
+      inserter_t& operator*()
+        {
+          return(*this);
+        }
+      inserter_t& operator++()
+        {
+          return(*this);
+        }
+      inserter_t& operator++(int i)
+        {
+          i;
+          return(*this);
+        }
+      private:
+        const std::vector<reg_t>& global;
+        i_assignment_t& ia;
+    };
+
+  for (ai = alist.begin(), ai_end = alist.end(); ai != ai_end; ++ai)
+    {
+      i_assignment_t ia;
+
+      std::set_intersection(ai->local.begin(), ai->local.end(), G[i].alive.begin(), G[i].alive.end(), inserter_t(ai->global, ia));
+
+      ai->i_assignment = ia;
+    }
+#else // Human-readable code
   for (ai = alist.begin(), ai_end = alist.end(); ai != ai_end; ++ai)
     {
       varset_t i_variables;
@@ -614,6 +642,7 @@ void assignments_introduce_instruction(assignment_list_t &alist, unsigned short 
 
       ai->i_assignment = ia;
     }
+#endif
 }
 
 template <class G_t, class I_t>
@@ -711,6 +740,7 @@ static void drop_worst_assignments(assignment_list_t &alist, unsigned short int 
   std::cout << "Too many assignments here (" << i << "):" << alist_size << " > " << options.max_allocs_per_node / port->num_regs << ". Dropping some.\n"; std::cout.flush();
 #endif
 
+#if 0
   assignment_rep *arep = new assignment_rep[alist_size];
 
   for (n = 0, ai = alist.begin(); n < alist_size; ++ai, n++)
@@ -725,7 +755,61 @@ static void drop_worst_assignments(assignment_list_t &alist, unsigned short int 
 
   for (n = options.max_allocs_per_node / port->num_regs + 1; n < alist_size; n++)
     alist.erase(arep[n].i);
-    
+#else // More efficient, reduces total SDCC runtime by about 1%.
+
+  size_t endsize = options.max_allocs_per_node / port->num_regs + 1;
+  size_t arep_maxsize = std::min(alist_size, endsize * 2) + 1;
+  size_t m, k;
+  float bound = std::numeric_limits<float>::infinity();
+
+  assignment_rep *arep = new assignment_rep[arep_maxsize];
+
+  for(m = 0, n = 1, ai = alist.begin(), ++ai; n < alist_size; n++)
+    {
+      float s = ai->s;
+
+      if(s > bound)
+        {
+          alist.erase(ai++);
+          continue;
+        }
+      s += compability_cost(*ai, ac, I);
+      if(s > bound)
+        {
+          alist.erase(ai++);
+          continue;
+        }
+      s += rough_cost_estimate(*ai, i, G, I);
+      if(s > bound)
+        {
+          alist.erase(ai++);
+          continue;
+        }
+
+      if(m >= arep_maxsize - 1)
+      {
+        std::nth_element(arep, arep + (endsize - 1), arep + m);
+        for(k = endsize; k < m; k++)
+          alist.erase(arep[k].i);
+        bound = arep[endsize - 1].s;
+        
+        m = endsize;
+      }
+
+      arep[m].i = ai;
+      arep[m].s = s;
+
+      m++;
+
+      ++ai;       
+    }
+
+  std::nth_element(arep, arep + (endsize - 1), arep + m);
+
+  for (n = endsize; n < m; n++)
+    alist.erase(arep[n].i);
+#endif
+
   delete[] arep;
 }
 
@@ -851,25 +935,23 @@ static void tree_dec_ralloc_forget(T_t &T, typename boost::graph_traits<T_t>::ve
   wassert(old_inst.size() == 1);
   unsigned short int i = *(old_inst.begin());
 
-  std::set<var_t> old_vars;
+  varset_t old_vars;
   std::set_difference(T[*c].alive.begin(), T[*c].alive.end(), T[t].alive.begin(), T[t].alive.end(), std::inserter(old_vars, old_vars.end()));
 
   assignment_list_t::iterator ai, aif;
 
   // Restrict assignments (locally) to current variables.
+  varset_t newlocal;
   for (ai = alist.begin(); ai != alist.end(); ++ai)
     {
-      // Erasing by iterators doesn't work with B-Trees, and erasing by value invalidates iterators.
-      std::set<var_t>::const_iterator oi, oi_end;
-      varset_t newlocal;
+      newlocal.clear();
       std::set_difference(ai->local.begin(), ai->local.end(), old_vars.begin(), old_vars.end(), std::inserter(newlocal, newlocal.end()));
-      ai->local = newlocal;
+      std::swap(ai->local, newlocal);
 
       ai->i_costs.erase(i);
     }
 
   alist.sort();
-  //std::sort(alist.begin(), alist.end());
 
   // Collapse (locally) identical assignments.
   for (ai = alist.begin(); ai != alist.end();)

@@ -1,3 +1,282 @@
+2017-09-29 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  support/regression/tests/addsub.c:
+	  Optimize addition.
+
+2017-09-28 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  support/regression/tests/p99-conformance.c,
+	  doc/sdccman.lyx:
+	  Implement RFE #537: static in array parameters.
+
+2017-09-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-pr7*.c
+	  support/regression/tests/gcc-torture-execute-pr8*.c:
+	  Port more tests from the GCC testsuite.
+	* support/regression/tests/gcc-torture-execute-930529-1.c:
+	  Disable test that hangs on GCC 7.2.0 for host.
+	* support/regression/tests/gcc-torture-execute-pr51581-?.c:
+	  Fix for test-host.
+
+2017-09-26 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCerr.c:
+	  Improve error message for storage class specifiers in parameters.
+	* src/SDCC.y:
+	  Separate type qualifiers from type specifiers to prepare for RFE #2538.
+	* support/regression/tests/gcc-torture-execute-20120111-1.c,
+	  support/regression/tests/gcc-torture-execute-20120817-1.c,
+	  support/regression/tests/gcc-torture-execute-20140212-1.c,
+	  support/regression/tests/gcc-torture-execute-20141125-1.c,
+	  support/regression/tests/gcc-torture-execute-20170111-1.c,
+	  support/regression/tests/gcc-torture-execute-pr65170.c,
+	  support/regression/tests/gcc-torture-execute-pr65215-1.c,
+	  support/regression/tests/gcc-torture-execute-pr65215-2.c,
+	  support/regression/tests/gcc-torture-execute-pr66940.c,
+	  support/regression/tests/gcc-torture-execute-pr69320-4.c:
+	  Disable new long long tests for ds390.
+	* src/SDCC.y,
+	  src/SDCCerr.c,
+	  src/SDCCerr.h,
+	  src/SDCCsymt.h,
+	  src/SDCCsymt.c,
+	  support/regression/tests/p99-conformance.c:
+	  Partially fix bug #2538: const and volatile in array parameters.
+	* support/regression/tests/gcc-torture-execute-pr51581-1.c:
+	  Fix for test-host.
+	* src/SDCC.y,
+	  support/regression/tests/p99-conformance.c:
+	  Fix bug #2538: qualifiers in array parameters (ISO C99).
+	* doc/sdccman.lyx:
+	  Document missing support for static in array parameters.
+
+2017-09-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/gcc-torture-execute-20111227-1.c,
+	  support/regression/tests/gcc-torture-execute-2012*.c,
+	  support/regression/tests/gcc-torture-execute-2013*.c,
+	  support/regression/tests/gcc-torture-execute-2014*.c,
+	  support/regression/tests/gcc-torture-execute-2015*.c,
+	  support/regression/tests/gcc-torture-execute-2017*.c:
+	  Port more tests from the GCC testsuite.
+	* src/stm8/gen.c,
+	  support/regression/tests/gcc-torture-execute-20141022-1.c:
+	  Fix bug #2652.
+	* support/regression/tests/gcc-torture-execute-pr51581-1.c,
+	  support/regression/tests/gcc-torture-execute-pr51581-2.c:
+	  support/regression/tests/gcc-torture-execute-pr6*.c:
+	  Port more tests from the GCC testsuite.
+
+2017-09-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCval.c,
+	  support/regression/tests/bug-2645.c:
+	  Fix bug #2645, patch by Kamil Zbróg.
+	* src/z80/gen.c,
+	  support/regression/tests/bug-441448.c,
+	  support/regression/tests/bug2729218.c:
+	  Fix bug #2649.
+
+2017-09-25 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCdwarf2.c:
+	  Fix long long support in DWARF output (bug #2613)
+	* src/z80/gen.c:
+	  Fix interaction of __z88dk_fastcall with frame pointer setup when optimizing for code size (bug #2581).
+	* device/lib/calloc.c,
+	  support/regression/tests/malloc.c:
+	  Fix bug #2650.
+
+2017-09-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCicode.c:
+	  Optimize stm8 left shifts a bit better.
+
+2017-09-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/preserves_regs.c:
+	  Test specifications for preserved registers.
+
+2017-09-13 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/main.c:
+	  Fix handling of specifications for preserved registers.
+
+2017-09-12 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* support/regression/tests/bug-441448.c:
+	* support/regression/tests/bug2729218.c:
+	  Disabled for gbz80.
+
+2017-09-08 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/stm8/peeph.def:
+	  Optimize bit-xor with BCPL.
+	* support/regression/tests/bug-2642.c:
+	  Improve test case.
+
+2017-08-20 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* src/SDCCpeeph.c:
+	  Improve notVolatile() for stm8.
+	* src/stm8/peeph.def:
+	  Add more rules for optimization with BSET/BRES.
+	* support/regression/tests/bug-2642.c:
+	  Add a new test case.
+
+2017-08-17 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCglue.c:
+	  More verbose error message on initialization from incompatible pointer type.
+
+2017-08-14 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc:
+	  Fix bug #2640.
+
+2017-08-13 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCcse.c (cseBBlock),
+	* src/SDCCptropt.c (ptrPostIncDecOpt, pattern1, pattern2),
+	* src/SDCCptropt.h: fix bug #2459
+
+2017-08-12 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c: fix bug #2624
+
+2017-08-10 Philipp Klaus Krause <pkk AT spth.de>
+
+	* device/include/stdio.h,
+	  device/lib/ds390/putchar.c:
+	  Make getchar() prototype standard-compliant.
+	* src/stm8/gen.c:
+	  Improve I/O and bit toggling.
+
+2017-08-08 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix ASMOP_A / ASMOP_ZERO initialization.
+
+2017-08-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/ralloc2.cc,
+	  src/z80/gen.c:
+	  Improve use of register A.
+
+2017-08-07 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c,
+	  src/z80/gen.h:
+	  Refactor and optimize subtraction.
+	* sim/ucsim/z80.src/inst_ed.cc,
+	  sim/ucsim/z80.src/inst_ed_r2k.cc:
+	  Fix negation.
+
+2017-08-06 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve left shift.
+
+2017-08-01 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.h,
+	  src/z80/gen.c,
+	  src/z80/ralloc.h,
+	  src/z80/ralloc2.cc:
+	  Handle register A more like other registers.
+	* src/z80/peeph-z80.def:
+	  Instructions in jump target for cheaper short jumps.
+
+2017-08-01 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* support/regression/tests/gcc-torture-execute-20010224-1.c: re-enable
+
+2017-07-31 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Fix a gbz80 codegen issue.
+
+2017-07-31 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCmem.c (initMem),
+	* src/hc08/gen.c (aopForSym): fix bug #2385
+	* support/regression/tests/bug-2385.c: re-enable for all ports
+
+2017-07-30 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/z80/gen.c:
+	  Improve 16-bit left-shift by 7,
+	  improve transfers between hl and de (in codegen at a cost in peephole opt).
+
+2017-07-29 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* configure
+	* configure.ac:
+	  Remove requirement of C++14.
+
+2017-07-28 Ben Shi <powerstudio1st AT 163 DOT com>
+
+	* aclocal.m4:
+	  Added new file.
+	* configure
+	* configure.ac:
+	  Check if C++14 or C++11 is supported.
+
+2017-07-27 Philipp Klaus Krause <pkk AT spth.de>
+
+	* support/regression/tests/bug-2567.c:
+	  Test for bug #2567.
+
+2017-07-26 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/SDCCast.c,
+	* src/SDCCicode.c
+	* src/SDCCralloc.hpp: fix bug #2567, include block num in iCode debug
+
+2017-07-24 Erik Petrich <epetrich AT ivorytower.norman.ok.us>
+
+	* src/z80/gen.c: fix bug #2486 (frame pointer offset wrong)
+	* src/z80/peeph-z80.def,
+	* src/z80/peeph-r2k.def,
+	* src/z80/peeph-tlcs90.def: fix unsafe rules exposed by fixing #2486
+	* sdas/asrab/rabmch.c: fix encoding of ld (n+sp),hl instruction
+
+2017-07-23 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp:
+	  Speed up register allocator.
+	* src/stm8/gen.c:
+	  Spped up code generation a little bit.
+
+2017-07-21 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCralloc.hpp:
+	  Speed up register allocator a little bit.
+
+2017-07-20 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix an issue similar to bug #2633.
+	* src/SDCCralloc.hpp,
+	  src/stm8/ralloc2.cc:
+	  Speed up register allocator a bit.
+
+2017-07-19 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/stm8/gen.c:
+	  Fix bug #2633.
+
+2017-07-18 Philipp Klaus Krause <pkk AT spth.de>
+
+	* src/SDCCopt.c,
+	  support/regression/tests/loop.c:
+	  Improve narrowing of loop counters.
+
 2017-07-16 Philipp Klaus Krause <pkk AT spth.de>
 
 	* src/stm8/gen.c:
@@ -70,7 +349,7 @@
 	* sdas/asstm8/stm8pst.c:
 	  Support for break debug instruction, patch by Reto Schneider.
 
-2016-12-12 Ben Shi <powerstudio1st AT 163 DOT com>
+2017-06-30 Ben Shi <powerstudio1st AT 163 DOT com>
 
 	* src/SDCCast.c:
 	  add cast to left and right subtree only if they both can be casted.

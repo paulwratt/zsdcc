@@ -495,7 +495,7 @@ piCode (void *item, FILE * of)
     of = stdout;
 
   icTab = getTableEntry (ic->op);
-  fprintf (of, "%s(%d:%d:%d:%d:%d)\t", ic->filename, ic->lineno, ic->seq, ic->key, ic->depth, ic->supportRtn);
+  fprintf (of, "%s(%d:%d:%d:%d:%d:%d)\t", ic->filename, ic->lineno, ic->seq, ic->key, ic->depth, ic->supportRtn, ic->block);
   dbuf_init (&dbuf, 1024);
   icTab->iCodePrint (&dbuf, ic, icTab->printName);
   dbuf_write_and_destroy (&dbuf, of);
@@ -525,8 +525,8 @@ printiCChain (iCode * icChain, FILE * of)
         {
           struct dbuf_s dbuf;
 
-          fprintf (of, "%s(l%d:s%d:k%d:d%d:s%d)\t",
-                   loop->filename, loop->lineno, loop->seq, loop->key, loop->depth, loop->supportRtn);
+          fprintf (of, "%s(l%d:s%d:k%d:d%d:s%d:b%d)\t",
+                   loop->filename, loop->lineno, loop->seq, loop->key, loop->depth, loop->supportRtn, loop->block);
 
           dbuf_init (&dbuf, 1024);
           icTab->iCodePrint (&dbuf, loop, icTab->printName);
@@ -2114,7 +2114,7 @@ geniCodeMultiply (operand * left, operand * right, RESULT_TYPE resultType)
      efficient in most cases than 2 bytes result = 2 bytes << literal
      if port has 1 byte muldiv */
   if ((p2 > 0) && !IS_FLOAT (letype) && !IS_FIXED (letype) &&
-      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !TARGET_Z80_LIKE /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
+      !((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)) && !(TARGET_Z80_LIKE || TARGET_IS_STM8 && p2 == 1) /* Mimic old behaviour that tested port->muldiv, which was zero for stm8 and z80-like only. Someone should look into what really makes sense here. */) &&
       !TARGET_PIC_LIKE)      /* don't shift for pic */
     {
       if ((resultType == RESULT_TYPE_INT) && (getSize (resType) != getSize (ltype)))
@@ -3628,6 +3628,7 @@ geniCodeFunctionBody (ast * tree, int lvl)
   operand *func;
   char *savefilename;
   int savelineno;
+  short functionBlock;
 
   /* reset the auto generation */
   /* numbers */
@@ -3647,6 +3648,7 @@ geniCodeFunctionBody (ast * tree, int lvl)
   lineno = savelineno;
 
   /* create a proc icode */
+  functionBlock = block;
   ic = newiCode (FUNCTION, func, NULL);
   filename = ic->filename = OP_SYMBOL (func)->fileDef;
   lineno = ic->lineno = OP_SYMBOL (func)->lineDef;
@@ -3662,6 +3664,7 @@ geniCodeFunctionBody (ast * tree, int lvl)
   ast2iCode (tree->right, lvl + 1);
 
   /* create a label for return */
+  block = functionBlock;
   geniCodeLabel (returnLabel);
 
   /* now generate the end proc */

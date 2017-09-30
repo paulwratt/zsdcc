@@ -189,12 +189,12 @@ stm8_init_asmops (void)
   asmop_zero.type = AOP_LIT;
   asmop_zero.size = 1;
   asmop_zero.aopu.aop_lit = constVal ("0");
-  asmop_a.regs[A_IDX] = -1;
-  asmop_a.regs[XL_IDX] = -1;
-  asmop_a.regs[XH_IDX] = -1;
-  asmop_a.regs[YL_IDX] = -1;
-  asmop_a.regs[YH_IDX] = -1;
-  asmop_a.regs[C_IDX] = -1;
+  asmop_zero.regs[A_IDX] = -1;
+  asmop_zero.regs[XL_IDX] = -1;
+  asmop_zero.regs[XH_IDX] = -1;
+  asmop_zero.regs[YL_IDX] = -1;
+  asmop_zero.regs[YH_IDX] = -1;
+  asmop_zero.regs[C_IDX] = -1;
 
   asmop_one.type = AOP_LIT;
   asmop_one.size = 1;
@@ -979,7 +979,7 @@ aopOp (operand *op, const iCode *ic)
     aop->size = getSize (operandType (op));
     op->aop = aop;
 
-    for (i = 0; i < getSize (operandType (op)); i++)
+    for (i = 0; i < aop->size; i++)
       {
         aop->aopu.bytes[i].in_reg = !!sym->regs[i];
         if (sym->regs[i])
@@ -1436,10 +1436,10 @@ genCopy (asmop *result, int roffset, asmop *source, int soffset, int sizex, bool
     regsize += source->aopu.bytes[soffset + i].in_reg;
 
   a_dead |= (result->regs[A_IDX] >= 0 && result->regs[A_IDX] < n);
-  xl_dead = x_dead || (result->regs[XL_IDX] >= 0 && result->regs[XL_IDX] < n);
-  xh_dead = x_dead || (result->regs[XH_IDX] >= 0 && result->regs[XH_IDX] < n);
-  yl_dead = y_dead || (result->regs[YL_IDX] >= 0 && result->regs[YL_IDX] < n);
-  yh_dead = y_dead || (result->regs[YH_IDX] >= 0 && result->regs[YH_IDX] < n);
+  xl_dead = x_dead || (result->regs[XL_IDX] >= roffset && result->regs[XL_IDX] < roffset + n);
+  xh_dead = x_dead || (result->regs[XH_IDX] >= roffset && result->regs[XH_IDX] < roffset + n);
+  yl_dead = y_dead || (result->regs[YL_IDX] >= roffset && result->regs[YL_IDX] < roffset + n);
+  yh_dead = y_dead || (result->regs[YH_IDX] >= roffset && result->regs[YH_IDX] < roffset + n);
   x_dead |= (xl_dead && xh_dead);
   y_dead |= (yl_dead && yh_dead);
 
@@ -3639,14 +3639,9 @@ genPlus (const iCode *ic)
           if (!started && aopIsLitVal (rightop, i, 1, 0))
             ; // Skip over this byte.
           // We can use inc / dec only for the only, top non-zero byte, since it neither takes into account an existing carry nor does it update the carry.
-          else if (!started && i == size - 1 && aopIsLitVal (rightop, i, 1, 1))
+          else if (!started && i == size - 1 && (aopIsLitVal (rightop, i, 1, 1) || aopIsLitVal (rightop, i, 1, 255)))
             {
-              emit3 (A_INC, ASMOP_A, 0);
-              started = TRUE;
-            }
-          else if (!started && i == size - 1 && aopIsLitVal (rightop, i, 1, 255))
-            {
-              emit3 (A_DEC, ASMOP_A, 0);
+              emit3 (aopIsLitVal (rightop, i, 1, 1) ? A_INC : A_DEC, ASMOP_A, 0);
               started = TRUE;
             }
           else
@@ -4845,6 +4840,13 @@ genXor (const iCode *ic)
           continue;
         }
 
+      if (left->aop->type == AOP_DIR && aopSame (left->aop, i, result->aop, i, 1) &&
+        right->aop->type == AOP_LIT && isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) >= 0)
+        {
+          emit2 ("bcpl", "%s, #%d", aopGet (left->aop, i), isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)));
+          continue;
+        }
+
       right_stacked = stack_aop (right->aop, i, &right_offset);
 
       cheapMove (ASMOP_A, 0, left->aop, i, FALSE);
@@ -5035,7 +5037,7 @@ genOr (const iCode *ic)
           emit3_o (A_RLC, left->aop, i, 0, 0);
           i++;
         }
-      else if ((aopOnStack (left->aop, i, 1) || left->aop->type == AOP_DIR) && aopSame (left->aop, i, result->aop, i, 1) &&
+      else if (left->aop->type == AOP_DIR && aopSame (left->aop, i, result->aop, i, 1) &&
         right->aop->type == AOP_LIT && isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)) >= 0)
         {
           emit2 ("bset", "%s, #%d", aopGet (left->aop, i), isLiteralBit (byteOfVal (right->aop->aopu.aop_lit, i)));
@@ -5345,7 +5347,7 @@ genAnd (const iCode *ic, iCode *ifx)
           i += 2;
           continue;
         }
-      else if ((aopOnStack (left->aop, i, 1) || left->aop->type == AOP_DIR) && aopSame (left->aop, i, result->aop, i, 1) &&
+      else if (left->aop->type == AOP_DIR && aopSame (left->aop, i, result->aop, i, 1) &&
         right->aop->type == AOP_LIT && isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff) >= 0)
         {
           emit2 ("bres", "%s, #%d", aopGet (left->aop, i), isLiteralBit (~byteOfVal (right->aop->aopu.aop_lit, i) & 0xff));
@@ -5354,7 +5356,6 @@ genAnd (const iCode *ic, iCode *ifx)
         }
 
       // Cases that want a free a.
-
       if (!pushed_a && !(regDead (A_IDX, ic) && !result_in_a))
         {
           push (ASMOP_A, 0, 1);
@@ -6525,6 +6526,16 @@ genPointerSet (iCode * ic)
             }
           goto release;
         }
+    }
+
+  if (!bit_field && size == 1 && (result->aop->type == AOP_LIT || result->aop->type == AOP_IMMD) && aopInReg(right->aop, 0, A_IDX))
+    {
+      if (result->aop->type == AOP_LIT)
+        emit2 ("ld", "0x%02x%02x, %s", byteOfVal (result->aop->aopu.aop_lit, 1), byteOfVal (result->aop->aopu.aop_lit, 0), aopGet (right->aop, 0));
+      else
+        emit2 ("ld", "%s, %s", result->aop->aopu.aop_immd, aopGet (right->aop, 0));
+      cost (3, 1);
+      goto release;
     }
 
   // Long pointer indirect long addressing mode is useful only in two very specific cases:

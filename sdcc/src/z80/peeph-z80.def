@@ -129,7 +129,7 @@ replace restart {
 } by {
 	; peephole 12 loaded %2 into %3 (%4) directly instead of going through %1.
 	ld	%3 (%4), %2
-} if canAssign(%3 %4 %2), notVolatile(%1), notUsed(%1)
+} if canAssign(%3 %4 %2), notVolatile(%1), notUsed(%1), notSame(%1 'hl')
 
 replace restart {
 	ld	%1, %2 (%3)
@@ -149,7 +149,7 @@ replace restart {
 	ld	%5 (%6), %4
 	; peephole 14 loaded %7 into %2 (%3) directly instead of going through %1.
 	ld	%2 (%3), %7
-} if canAssign(%2 %3 %7), notVolatile(%1), notUsed(%1), notSame(%1 %4)
+} if canAssign(%2 %3 %7), notVolatile(%1), notUsed(%1), notSame(%1 %4 %1 'hl')
 
 replace restart {
 	ld	%1, %2 (%3)
@@ -374,7 +374,7 @@ replace restart {
 	; peephole 34 loaded %3 from %2 instead of going through %1 (ix).
 	ld	%1 (ix), %2
 	ld	%3, %2
-}
+} if canAssign(%3 %2)
 // Don't need to check for volatile, since ix is used for the stack.
 
 replace restart {
@@ -386,7 +386,7 @@ replace restart {
 	push	de
 	; peephole 34a loaded %2 from a instead of %1 (ix)
 	ld	%2, a
-}	
+} if canAssign(%2 'a')
 
 replace restart {
 	push	af
@@ -2432,5 +2432,179 @@ replace {
 } by {
 	djnz	%5
 	; peephole 158 used djnz
+}
+
+barrier
+
+// To weird to let any other peephole rules see the result of the rules below
+
+replace {
+	jr	Z, %2
+	ld	a, #%3
+	jr	%1
+%2:
+	ld	a, #%4
+%1:
+} by {
+	jr	Z, %2
+	ld	a, #%3
+	.db	#0xca
+	; peephole 159z used jp Z opcode to jump over 2-byte instruction.
+%2:
+	ld	a, #%4
+%1:
+}
+
+replace {
+	jr	NZ, %2
+	ld	a, #%3
+	jr	%1
+%2:
+	ld	a, #%4
+%1:
+} by {
+	jr	NZ, %2
+	ld	a, #%3
+	.db	#0xc2
+	; peephole 159nz used jp NZ opcode to jump over 2-byte instruction.
+%2:
+	ld	a, #%4
+%1:
+}
+
+replace {
+	jr	Z, %2
+	ld	a, #%3
+	jr	%1
+%2:
+	xor	a, a
+%1:
+} by {
+	jr	Z, %2
+	ld	a, #%3
+	.db	#0x28
+	; peephole 159xz used jr Z opcode to jump over 1-byte instruction.
+%2:
+	xor	a, a
+%1:
+}
+
+replace {
+	jr	NZ, %2
+	ld	a, #%3
+	jr	%1
+%2:
+	xor	a, a
+%1:
+} by {
+	jr	NZ, %2
+	ld	a, #%3
+	.db	#0x20
+	; peephole 159xnz used jr NZ opcode to jump over 1-byte instruction.
+%2:
+	xor	a, a
+%1:
+}
+
+replace {
+	jr	Z, %2
+	ld	c, #%3
+	jr	%1
+%2:
+	ld	c, #%4
+%1:
+} by {
+	jr	Z, %2
+	ld	c, #%3
+	.db	#0xca
+	; peephole 160z used jp Z opcode to jump over 2-byte instruction.
+%2:
+	ld	c, #%4
+%1:
+}
+
+replace {
+	jr	NZ, %2
+	ld	c, #%3
+	jr	%1
+%2:
+	ld	c, #%4
+%1:
+} by {
+	jr	NZ, %2
+	ld	c, #%3
+	.db	#0xc2
+	; peephole 160nz used jp NZ opcode to jump over 2-byte instruction.
+%2:
+	ld	c, #%4
+%1:
+}
+
+replace {
+	jr	Z, %2
+	ld	e, #%3
+	jr	%1
+%2:
+	ld	e, #%4
+%1:
+} by {
+	jr	Z, %2
+	ld	e, #%3
+	.db	#0xca
+	; peephole 161z used jp Z opcode to jump over 2-byte instruction.
+%2:
+	ld	e, #%4
+%1:
+}
+
+replace {
+	jr	NZ, %2
+	ld	e, #%3
+	jr	%1
+%2:
+	ld	e, #%4
+%1:
+} by {
+	jr	NZ, %2
+	ld	e, #%3
+	.db	#0xc2
+	; peephole 161nz used jp NZ opcode to jump over 2-byte instruction.
+%2:
+	ld	e, #%4
+%1:
+}
+
+replace {
+	jr	Z, %2
+	ld	l, #%3
+	jr	%1
+%2:
+	ld	l, #%4
+%1:
+} by {
+	jr	Z, %2
+	ld	l, #%3
+	.db	#0xca
+	; peephole 162z used jp Z opcode to jump over 2-byte instruction.
+%2:
+	ld	l, #%4
+%1:
+}
+
+replace {
+	jr	NZ, %2
+	ld	l, #%3
+	jr	%1
+%2:
+	ld	l, #%4
+%1:
+} by {
+	jr	NZ, %2
+	ld	l, #%3
+	.db	#0xc2
+	; peephole 162nz used jp NZ opcode to jump over 2-byte instruction.
+%2:
+	ld	l, #%4
+%1:
 }
 

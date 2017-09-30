@@ -36,6 +36,8 @@
 
 #include <testfwk.h>
 
+#pragma disable_warning 85
+
 #define SKIP_EVALUATED_COMMA_ASSIGN /* Looks like testing for some particular implementation-defined behaviour to me */
 
 #ifdef PORT_HOST /* Common GCC issues */
@@ -50,14 +52,10 @@
 # define SKIP_LONG_DOUBLE /* long double not yet supported */
 # define SKIP_UNIVERSAL
 # define SKIP_MIXED /* mixing of declaration and other statements (C99 feature) not yet supported */
-# define SKIP_RESTRICT_PARAMETER /* bug #2538 */
-# define SKIP_VOLATILE_PARAMETER /* bug #2538 */
-# define SKIP_CONST_PARAMETER /* bug #2538 */
-# define SKIP_STATIC_PARAMETER /* bug #2537 */
 # define SKIP_COMPOUND /* compound literals not yet supported */
 # define SKIP_VLA /* variable-length arrays not supported */
 # define SKIP_INLINE /* bug #1900 */
-# define SKIP_PRAGMA
+# define SKIP_PRAGMA /* Standard pragmas not supported */
 # pragma disable_warning 93 /* Using float for double. */
 # if defined(__SDCC_ds390) || defined(__SDCC_ds400) || defined(__SDCC_pic14) || defined(__SDCC_pic16)
 #  define SKIP_LONG_LONG

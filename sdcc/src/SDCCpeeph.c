@@ -718,6 +718,8 @@ notVolatileVariable(char *var, lineNode *currPl, lineNode *endPl)
         return FALSE;
       if (strchr (var, '[') && strchr (var, ']'))
         return FALSE;
+      if (strstr(var, "0x") || strstr(var, "0X") || isdigit(var[0]))
+        return FALSE;
     }
 
   /* Extract a symbol name from the variable */
